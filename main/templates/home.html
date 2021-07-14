@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row" style="margin-top: 10px;">
+        <div class="col-1"></div>
+        <div class="col-2 text-center shadow" style="font-size: 20px;font-weight: bold;border-radius: 5px;">
+            {{request.session.username}}
+        </div>
+        <div class="col-7"></div>
+        <div class="col-1">
+            <button class="btn btn-secondary" onclick="logoutuser()">Log Out</button>
+        </div>
+    </div>
+    <div class="row" style="margin-top: 30px;">
+        <div class="col-3"></div>
+        <div class="col-6 shadow text-center my-auto" style="padding: 20px;border-radius: 10px;">
+            <img src="{% static 'img/ulogo.png' %}" alt="" style="transform: scale(0.6);">
+            <br>
+            <a href="{% url 'resources' %}">
+                <button class="btn btn-primary" style="margin-bottom: 20px">Manage Resources</button>
+            </a>
+            <br>
+            <a href="{% url 'masters' %}">
+                <button class="btn btn-info" style="margin-bottom: 20px">Manage Master</button>
+            </a>
+            <br>
+            <a href="{% url 'all_boqs' %}">
+                <button class="btn btn-info" style="margin-bottom: 20px">Manage BOQs</button>
+            </a>
+            <br>
+            <div class="row">
+                <div class="col-3"></div>
+                <!-- <div class="col">
+                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#importModal">Import Project</button>
+                </div> -->
+                <div class="col-3">
+                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#exampleModal">New Project</button>
+                </div>
+                <div class="col-3">
+                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#boqModal">Open Project</button>
+                </div>
+            </div>
+
+            <!-- Import project Modal -->
+            <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#" method="POST">
+                            <input type="file" id="import_file" name="import_file" class="form-control" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                        </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="boqModal" aria-labelledby="boqModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="boqModalLabel">Open Project</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select class='select2 form-control form-control-sm' id="boqid" style="width: 100%;">
+                                <option value='select'>Select Project...</option>
+                                {% for bo in boqs %}
+                                <option value='{{bo.id}}' class="option">{{bo.code}} /
+                                    {{bo.name}}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="button" onclick="open_boq()" value="Open" style="margin-top: 20px;" class="btn btn-primary">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Create Project</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{% url 'create_boq' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="text" class="form-control" name="boqcode" id="boqcode" placeholder="Project code">
+                                <input type="text" class="form-control" name="boqname" id="boqname" placeholder="Project Name" style="margin-top: 10px;">
+                                <textarea name="boqdesc" id="boqdesc" class="form-control" rows="5" style="margin-top: 10px;"></textarea>
+                                <input type="submit" value="Create" style="margin-top: 20px;" class="btn btn-primary">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

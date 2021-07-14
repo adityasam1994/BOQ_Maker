@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load app_filters %}
+{% block content %}
+
+<div id="overlay" hidden>
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="container-fluid" style="padding: 10px;position: fixed;background-color: white;border-bottom: 1px solid;">
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-1">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-3"></div>
+        <div class="col-4 text-center" style="font-size: 30px;font-weight: bold;border-radius: 5px;border: 1px solid;">
+            Master Items
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 30px">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" style="border-radius: 50px;" onkeyup="search_local_boq()" class="form-control w-100"
+                name="search" id="search" placeholder="Search...">
+        </div>
+    </div>
+
+    <input type="text" id="row_count" value="{{ masters|length }}" hidden>
+
+</div>
+<div class="container-fluid" style="padding: 170px 10px 0px 10px">
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Description</th>
+                        <th scope="col" class="text-center">Won</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% for boq in boqs %}
+                    <tr style="cursor: pointer;" class="table_row">
+                        <th style="width: 10%;" scope="row" class="rowid" hidden>{{ boq.id }}</th>
+                        <th style="width: 10%;" scope="row" class="rownum">{{ forloop.counter }}</th>
+                        <td style="width: 20%;" class="rowcode">{{boq.code}}</td>
+                        <td style="width: 30%;" class="rowname">{{boq.name}}</td>
+                        <td style="width: 20%;" class="rowdesc">{{boq.description}}</td>
+                        <td style="width: 20%;" class="rowwon text-center">
+                            <i class="fas fa-check-circle wonicon" {% if boq.won == True %} style="color: green;font-size: 24px;" 
+                            {% else %} style="color: gray;font-size: 24px;" {% endif %}></i>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="boqModal" tabindex="-1" aria-labelledby="boqModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="boqModalLabel">Edit BOQ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="boqid" hidden>
+            <label for="">Code</label>
+            <input type="text" id="code" class="form-control" placeholder="Code">
+            <label for="">Name</label>
+            <input type="text" id="name" class="form-control" placeholder="Name">
+            <label for="">Description</label>
+            <textarea id="description" rows="5" class="form-control"></textarea>
+            <label for="">Won</label>
+            <input type="checkbox" id="won">
+            <br>
+            <div class="row">
+                <div class="col">
+                    <input type="button" class="btn btn-success w-100" onclick="update_boq()" value="Update" style="margin-top: 20px;">
+                </div>
+                <div class="col">
+                    <input type="button" class="btn btn-success w-100" onclick="copy_boq()" value="Make Copy" style="margin-top: 20px;">
+                </div>
+                <div class="col">
+                    <input type="button" class="btn btn-success w-100" onclick="open_my_boq()" value="Open BOQ" style="margin-top: 20px;">
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+      var clicked_event = null;
+
+        function open_my_boq(){
+            var bid = document.getElementById("boqid").value;
+            window.open("/show_excel_boq/"+bid, "_self");
+        }
+
+        function search_local_boq(){
+            var txt = document.getElementById("search").value.toLowerCase();
+            var rows = document.getElementsByClassName("table_row");
+            var i;
+            for(i=0;i<rows.length;i++){
+                var cd = rows[i].getElementsByClassName("rowcode")[0].innerHTML.toLowerCase();
+                var nm = rows[i].getElementsByClassName("rowname")[0].innerHTML.toLowerCase();
+
+                if(cd.includes(txt) || nm.includes(txt)){
+                    rows[i].hidden = false;
+                }else{
+                    rows[i].hidden = true;
+                }
+            }
+        }
+
+      document.addEventListener("click", function(event){
+        var cls = event.target;
+        if(cls.classList.contains("rowcode") || cls.classList.contains("rowname")){
+            clicked_event = event;
+            var boqid = cls.parentNode.getElementsByClassName("rowid")[0].innerHTML;
+            var cd = cls.parentNode.getElementsByClassName("rowcode")[0].innerHTML;
+            var nm = cls.parentNode.getElementsByClassName("rowname")[0].innerHTML;
+            var desc = cls.parentNode.getElementsByClassName("rowdesc")[0].innerHTML;
+            var won = cls.parentNode.getElementsByClassName("wonicon")[0];
+            var cl = ($(won).css('color'));
+            if (cl == "rgb(0, 128, 0)"){
+                document.getElementById("won").checked=true;    
+            }else{
+                document.getElementById("won").checked=false;
+            }
+
+            document.getElementById("boqid").value=boqid;
+            document.getElementById("code").value = cd;
+            document.getElementById("name").value = nm;
+            document.getElementById("description").value = desc;
+            
+            $("#boqModal").modal("show");
+        }
+      });
+
+      function copy_boq(){
+        var boqid = document.getElementById("boqid").value;
+        var cod = document.getElementById("code").value;
+        var nm = document.getElementById("name").value;
+        var desc = document.getElementById("description").value;
+        var won = document.getElementById("won");
+        var w = "";
+        if(won.checked == true){
+            w="won";
+        }
+        var data = boqid+"/////"+cod+"/////" + nm + "/////" + desc +"/////" + w;
+        $.ajax({
+            url: 'copy_boq/',
+            type: 'POST',
+            async: false,
+            data: { data: data},
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function (json) {
+                var bid = json.data;
+                var tabrow = document.getElementsByClassName("table_row")[0];
+                var clone = tabrow.cloneNode(true);
+                tabrow.parentNode.appendChild(clone);
+                clone.getElementsByClassName("rowid")[0].innerHTML = bid;
+                clone.getElementsByClassName("rowcode")[0].innerHTML = cod;
+                clone.getElementsByClassName("rowname")[0].innerHTML = nm;
+                clone.getElementsByClassName("rowdesc")[0].innerHTML = desc;
+                if(w=="won"){
+                    $(clone.getElementsByClassName("wonicon")[0]).css('color', 'green');
+                }else{
+                    $(clone.getElementsByClassName("wonicon")[0]).css('color', 'gray');
+                }
+                $("#boqModal").modal("hide");
+            },
+            error: function (xhr, errmsg, err) {
+                alert(err);
+            }
+        });
+      }
+
+      function update_boq(){
+        var boqid = document.getElementById("boqid").value;
+        var cod = document.getElementById("code").value;
+        var nm = document.getElementById("name").value;
+        var desc = document.getElementById("description").value;
+        var won = document.getElementById("won");
+        var w = "";
+        if(won.checked == true){
+            w="won";
+        }
+        var data = boqid+"/////"+cod+"/////" + nm + "/////" + desc +"/////" + w;
+        $.ajax({
+            url: 'update_boq/',
+            type: 'POST',
+            async: false,
+            data: { data: data},
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function (json) {
+                var bid = json.data;
+                var cls = clicked_event.target;
+                cls.parentNode.getElementsByClassName("rowid")[0].innerHTML = bid;
+                cls.parentNode.getElementsByClassName("rowcode")[0].innerHTML = cod;
+                cls.parentNode.getElementsByClassName("rowname")[0].innerHTML = nm;
+                cls.parentNode.getElementsByClassName("rowdesc")[0].innerHTML = desc;
+                if(w=="won"){
+                    $(cls.parentNode.getElementsByClassName("wonicon")[0]).css('color', 'green');
+                }else{
+                    $(cls.parentNode.getElementsByClassName("wonicon")[0]).css('color', 'gray');
+                }
+                $("#boqModal").modal("hide");
+            },
+            error: function (xhr, errmsg, err) {
+                alert(err);
+            }
+        });
+      }
+  </script>
+{% endblock%}

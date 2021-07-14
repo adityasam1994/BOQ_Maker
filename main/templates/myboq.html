@@ -1,0 +1,818 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div id="overlay" hidden>
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="container-fluid">
+<div id="convert_menu" hidden class="shadow" onclick="convert_description()">
+    <p>Convert to billable item</p>
+</div>
+</div>
+
+<div class="container-fluid">
+    <div id="convert_menu_billable" hidden class="shadow" onclick="convert_billable()">
+        <p>Convert to description</p>
+    </div>
+</div>
+
+<div class="shadow text-center tst" style="visibility: hidden;">
+
+    BOQ Saved
+
+</div>
+
+<div class="container-fluid" style="padding-top: 5px;">
+    <div class="row shadow toprow">
+        <div class="col-auto my-auto">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-4 boqname" id="boqname">
+            {{ boq.name }}
+        </div>
+
+        <textarea id="datatext" cols="30" rows="10" hidden>{{ boq.data }}</textarea>
+
+        <div class="col-3" id="boq_total">
+            Total Selling: AED 00.00 <br>
+            Total Dry: AED 00.00
+        </div>
+        <input type="text" id="boqid" value="{{ boq.id }}" hidden>
+        <input type="text" id="modal_type" value="add" hidden>
+
+        <div class="col-2 my-auto">
+            <input type="file" name="excelfile" id="excelfile" hidden>
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#excelModal">
+                Upload BOQ
+            </button>
+        </div>
+
+        <div class="col-2 my-auto">
+            <button class="btn btn-primary w-100 my-auto" data-bs-toggle="modal" data-bs-target="#AddMasterModal">
+                Add New Master Item
+            </button>
+        </div>
+
+    </div>
+    <!-- Excel Upload Modal Start -->
+    <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="excelModalLabel">Select File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'load_excel_boq' boq.id %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="text" name="boqid" value="{{ boq.id }}" hidden>
+                        <input type="file" id="uploaded_file" name="uploaded_file" class="form-control">
+                        <p style="font-weight: bold;margin-top: 30px;margin-bottom: 0px;">Enter the respective column
+                            numbers</p>
+                        <div class="row">
+                            <div class="col">
+                                <label for="">Heading</label>
+                                <input type="number" class="form-control" name="heading_number" id="heading_number">
+                            </div>
+                            <div class="col">
+                                <label for="">Description</label>
+                                <input type="number" class="form-control" name="desc_number" id="desc_number">
+                            </div>
+                            <div class="col">
+                                <label for="">Quantity</label>
+                                <input type="number" class="form-control" name="quantity_number" min="1" id="quantity_number">
+                            </div>
+                            <div class="col">
+                                <label for="">UOM</label>
+                                <input type="number" class="form-control" name="uom_number" id="uom_number">
+                            </div>
+                            <div class="col">
+                                <label for="">First Row</label>
+                                <input type="number" class="form-control" name="first_number" id="first_number">
+                            </div>
+                        </div>
+                        <input type="submit" value="Open" class="btn btn-success" style="margin-top: 20px;">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel Modal Upload End -->
+
+     <!-- Add Master Modal -->
+     <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="AddMasterModal"
+     aria-labelledby="AddMasterModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-xl">
+         <div class="modal-content">
+             <div class="modal-header">
+                 <h5 class="modal-title" id="AddMasterModalLabel">Master Item</h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="position: static; ">
+                 <label for="" class="modal_label" style="margin-top: 10px;">Code</label>
+                 <input type="text" id="add_master_code" class="form-control modal_field" placeholder="Code">
+                 <label for="" class="modal_label">Name</label>
+                 <input type="text" id="add_master_name" class="form-control modal_field" placeholder="Master Name">
+                 <label for="" class="modal_label">Remark</label>
+                 <input type="text" id="add_master_remark" class="form-control modal_field" placeholder="Remark">
+                 <input type="text" id="add_master_id" value="999999" hidden>
+
+                 <div class="labels">
+                     <div class="row" style="font-weight: bold;">
+                         <div class="col-4 master_label">
+                             Resource
+                         </div>
+                         <div class="col master_label px-0">
+                             Category
+                         </div>
+                         <div class="col master_label">
+                             Quantity
+                         </div>
+                         <div class="col master_label px-0">
+                             Price
+                         </div>
+                         <div class="col master_label">
+                             Amount
+                         </div>
+                         <div class="col-2 master_label px-0">
+                             Remark
+                         </div>
+                         <div class="col-auto" style="visibility: hidden;">x</div>
+                     </div>
+                 </div>
+
+                 <div class="add_modal_master_container">
+                     <div class="row add_modal_resource_row" style="margin-bottom: 10px;">
+                         <div class="col-4">
+                             <input type="text" class="add_selected_resource" hidden>
+                             <input type="text" class="form-control form-control-sm add_master_resource" placeholder="Select Master Item...">
+                             <div id="myDropdown" class="dropdown_content">
+                                 {% for resource in resources %}
+                                 <option value='{{resource.id}}' onclick="set_add_value(event)" class="add_res_option">{{resource.code}} / {{resource.name}}</option>
+                                 {% endfor %}
+                               </div>
+                         </div>
+
+                         <div class="col px-0">
+                             <input type="text"class='form-control form-control-sm add_master_category' placeholder="Category">
+                         </div>
+
+                         <div class="col">
+                             <input type="number" onchange="calculate_add_modal_price()" min="1" class="add_master_quantity form-control form-control-sm" value="1">
+                         </div>
+                         <div class="col px-0">
+                             <input type="number" id="modal_price1" readonly onchange="calculate_add_modal_price()" step="0.01"
+                                 class="add_master_price form-control form-control-sm" value="0">
+                         </div>
+                         <div class="col">
+                             <input type="number" class="add_master_amount form-control form-control-sm" step="0.01" value="0" readonly>
+                         </div>
+                         <div class="col-2 px-0">
+                             <input type="text" class="form-control form-control-sm add_master_remark" placeholder="Remark">
+                         </div>
+                         <div class="col-auto add_cross" style="cursor: pointer;visibility: hidden;" onclick="delete_add_resource(event)">x</div>
+                     </div>
+                 </div>
+
+                 <div class="row" style="margin-top: 20px;">
+                     <div class="col">
+                         <button class="btn btn-info" onclick="clone_add_resource_row()">Add Resource</button>
+                     </div>
+                     <div class="col-3 text-end">
+                         <p id="add_master_total">AED 00.00</p>
+                     </div>
+                     <div class="col-auto" style="visibility: hidden;">x</div>
+                 </div>
+             </div>
+             <div class="modal-footer">
+                 <button type="button" class="btn btn-danger" onclick="clear_add_master_select_modal()">Clear</button>
+                 <button type="button" class="btn btn-primary" id="selectmaster" onclick="save_add_excel_master('sv')">Save</button>
+                 <button type="button" class="btn btn-primary" id="selectmaster" onclick="save_add_excel_master('next')">Save & Next</button>
+
+             </div>
+         </div>
+     </div>
+ </div>
+
+ <!-- Add Master Modal End -->
+
+    <!-- Master Modal -->
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="MasterModal"
+        aria-labelledby="MasterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="MasterModalLabel">Master Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="position: static; ">
+                    <label for="" class="modal_label">Master Item</label>
+                    <input type="text" class="selected_master" id="master_item" hidden>
+                    <input type="text" class="form-control form-control-sm master_select" placeholder="Select Master Item...">
+                    <div id="myDropdown_master" class="master_dropdown_content">
+                        {% for master in masters %}
+                        <option value='{{master.id}}' onclick="set_master_value(event)" class="master_option">{{master.code}} / {{master.name}}</option>
+                        {% endfor %}
+                    </div>
+                    <label for="" class="modal_label" style="margin-top: 10px;">Code</label>
+                    <input type="text" id="master_code" class="form-control modal_field" placeholder="Code">
+                    <label for="" class="modal_label">Name</label>
+                    <input type="text" id="master_name" class="form-control modal_field" placeholder="Master Name">
+                    <label for="" class="modal_label">Remark</label>
+                    <input type="text" id="master_remark" class="form-control modal_field" placeholder="Remark">
+                    <input type="text" id="master_id" value="999999" hidden>
+
+                    <div class="labels">
+                        <div class="row" style="font-weight: bold;">
+                            <div class="col-4 master_label">
+                                Resource
+                            </div>
+                            <div class="col master_label px-0">
+                                Category
+                            </div>
+                            <div class="col master_label">
+                                Quantity
+                            </div>
+                            <div class="col master_label px-0">
+                                Price
+                            </div>
+                            <div class="col master_label">
+                                Amount
+                            </div>
+                            <div class="col master_label px-0">
+                                Remark
+                            </div>
+                            <div class="col-auto" style="visibility: hidden;">x</div>
+                        </div>
+                    </div>
+
+                    <div class="modal_master_container">
+                        <div class="row modal_resource_row">
+                            <div class="col-4">
+                                <input type="text" class="selected_resource" hidden>
+                                <input type="text" class="form-control form-control-sm master_resource" placeholder="Select Master Item...">
+                                <div id="myDropdown" class="dropdown_content">
+                                    {% for resource in resources %}
+                                    <option value='{{resource.id}}' onclick="set_value(event)" class="res_option">{{resource.code}} / {{resource.name}}</option>
+                                    {% endfor %}
+                                  </div>
+                            </div>
+
+                            <div class="col px-0">
+                                <input type="text"class='form-control form-control-sm master_category' readOnly>
+                                <!-- <select class='form-control form-control-sm master_category' readOnly>
+                                    <option value='material'>Material</option>
+                                    <option value='accessories'>Accessories</option>
+                                    <option value='plantNtools'>Plant & Tools</option>
+                                    <option value='labour'>Labour</option>
+                                    <option value='staff'>Staff</option>
+                                    <option value='temporary'>Temporary</option>
+                                    <option value='preliminary'>Preliminary</option>
+                                    <option value='provsum'>Prov. Sum</option>
+                                    <option value='subcontract'>Sub Contract</option>
+                                </select> -->
+                            </div>
+
+                            <div class="col">
+                                <input type="number" onchange="calculate_modal_price()" min="1" class="master_quantity form-control form-control-sm" value="1">
+                            </div>
+                            <div class="col px-0">
+                                <input type="number" id="modal_price1" onchange="calculate_modal_price()" step="0.01"
+                                    class="master_price form-control form-control-sm" value="0">
+                            </div>
+                            <div class="col">
+                                <input type="number" class="master_amount form-control form-control-sm" step="0.01" value="0" readonly>
+                            </div>
+                            <div class="col px-0">
+                                <input type="text" class="form-control form-control-sm master_remark" placeholder="Remark">
+                            </div>
+                            <div class="col-auto cross" style="cursor: pointer;visibility: hidden;" onclick="delete_resource(event)">x</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn btn-info" onclick="clone_resource_row()">Add Resource</button>
+                        </div>
+                        <div class="col-3 text-end">
+                            <p id="master_total">AED 00.00</p>
+                        </div>
+                        <div class="col-auto" style="visibility: hidden;">x</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="clear_master_select_modal()">Clear</button>
+                    <!-- <button type="button" class="btn btn-primary" onclick="save_excel_master()">Save</button> -->
+                    <button type="button" class="btn btn-primary" id="selectmaster" onclick="select_master()">Done</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Modal End -->
+
+    <div class="row" style="margin-top: 50px;position: fixed;left: 0px;width: 100%;background: white;">
+        <div class="col-8 my-auto">
+            <button class="btn btn-success" onclick="save_my_boq()" style="margin-left: 20px;">Save BOQ</button>
+            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#ExportModal">Export BOQ</button>
+            <p id="col_exp" hidden>1</p>
+            <button class="btn btn-info" id="colpbtn" onclick="collapse_all()">Collapse All</button>
+        </div>
+
+        <div class="col-1">
+            <label for="f1">Factor 1</label>
+            <input type="number" name="f1" id="f1" step="0.01" onchange="calculate_final_price()"
+                value="{{ boq.factor1 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f2">Factor 2</label>
+            <input type="number" name="f2" id="f2" step="0.01" onchange="calculate_final_price()"
+                value="{{ boq.factor2 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f3">Factor 3</label>
+            <input type="number" name="f3" id="f3" step="0.01" onchange="calculate_final_price()"
+                value="{{ boq.factor3 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f4">Factor 4</label>
+            <input type="number" name="f4" id="f4" step="0.01" onchange="calculate_final_price()"
+                value="{{ boq.factor4 }}" class="form-control form-control-sm">
+        </div>
+    </div>
+    <div id="bigblock" style="margin-top: 120px;display: flex;flex-direction: column;">
+
+        <!-- Excel Block Starts Here -->
+
+        <div class='row excel_row' style='margin-top: 10px;' hidden>
+            <div class='bb'>
+                <p class='excel_heading_number'>1</p>
+                <input type='text' class='excel_heading form-control' placeholder='Heading' style='font-weight:bold'>
+                <div style='margin-left:200px;cursor: pointer;' class='detail_row'
+                    onclick='delete_excel_category(event)'>x</div>
+                <div style='margin-left:200px' class='detail_row'>
+                    <button class='btn btn-sm btn-secondary toggle_btn' onclick='toggle_block(event)'>Collapse</button>
+                </div>
+                <div class='detail_row topdetail'
+                    style='border:1px solid;border-radius:5px;padding-left:10px;padding-right:10px'>Dry: AED 00.00 /
+                    Selling: AED 00.00</div>
+                <div class='bb_container_false' style='display:block'>
+                    <div style='float:left;visibility:hidden'>1.12</div>
+                    <div class='row' hidden>
+                        <div class='col-2 field_name px-0'>Description</div>
+                        <div class='col-1 field_name'>Quantity</div>
+                        <div class='col-1 field_name px-0'>UOM</div>
+                        <div class='col-1 field_name'>Rate</div>
+                        <div class='col-1 field_name px-0'>Amount</div>
+                        <div class='col-1 field_name'>Factor</div>
+                        <div class='col-1 field_name px-0'>Sell Rate</div>
+                        <div class='col-1 field_name'>Sell Amount</div>
+                        <div class='col-2 field_name px-0'>Remark</div>
+                    </div>
+                </div>
+                <br>
+                <div class='bb_container' style='display:block'>
+                    <h6 style="margin-left: 40px;" class="excel_comment" hidden>This is a description from the boq
+                        provided by the client</h6>
+                    <div class="excel_master_row_container" hidden>
+
+                        <div class='excel_item_number' style='float:left;width: 40px;'>1.1</div>
+                        <div class='row child_rows'>
+                            <!-- <div class="col-auto my-auto">
+                                <img src="{% static 'img/uparrow.png' %}" onclick="move_up(event)" style="width: 20px;" alt="">
+                                <img src="{% static 'img/uparrow.png' %}" onclick="move_down(event)" style="width: 20px;transform: rotate(180deg);" alt="">
+                            </div> -->
+                            <div class='col-3 px-0 select_column'>
+                                <label for="" class="master_label">Description</label>
+                                <textarea class="form-control form-control-sm excel_desc"
+                                    rows="1"></textarea>
+                            </div>
+                            <div class='col-1'>
+                                <label for="" class="master_label">Quantity</label>
+                                <input type='number' class='form-control form-control-sm excel_quantity' min="1"
+                                    onchange='calculate_final_price()' value='1'>
+                            </div>
+                            <div class='col-1 px-0'>
+                                <label for="" class="master_label">UOM</label>
+                                <input type='text' class='form-control form-control-sm excel_uom' placeholder='UOM'>
+                            </div>
+                            <div class='col-1'>
+                                <label for="" class="master_label">Price</label>
+                                <input type="text" class="my_master_id" hidden>
+                                <input type='number' class='form-control form-control-sm excel_price' readonly
+                                    onmousedown='price_clicked(event)' step='0.01' value='0'>
+                            </div>
+                            <div class='col-1 px-0'>
+                                <label for="" class="master_label">Amount</label>
+                                <input type='number' class='form-control form-control-sm excel_amount' step='0.01'
+                                    readonly value='0'>
+                            </div>
+                            <div class='col-1'>
+                                <label for="" class="master_label">Factor</label>
+                                <select class='form-control form-control-sm excel_factor'
+                                    onchange='calculate_final_price()'>
+                                    <option value='f1'>Factor 1</option>
+                                    <option value='f2'>Factor 2</option>
+                                    <option value='f3'>Factor 3</option>
+                                    <option value='f4'>Factor 4</option>
+                                </select>
+                            </div>
+                            <div class='col-1 px-0'>
+                                <label for="" class="master_label">Sell Price</label>
+                                <input type='number' class='form-control form-control-sm excel_sell_price' readonly
+                                    value='0'>
+                            </div>
+                            <div class='col-1'>
+                                <label for="" class="master_label">Sell Amount</label>
+                                <input type='number' class='form-control form-control-sm excel_sell_amount' readonly
+                                    value='0'>
+                            </div>
+                            <div class='col px-0'>
+                                <label for="" class="master_label">Remark</label>
+                                <textarea class="form-control form-control-sm excel_remark" rows="1"></textarea>
+                            </div>
+                            <div class='col-auto cross' onclick="delete_excel_master(event)"
+                                style='font-weight:bold;cursor:pointer'>x</div>
+                        </div>
+                    </div>
+                </div>
+                <button class='btn btn-info' style='margin-left: 15px;' onclick='clone_master_row(event)'>Add Item</button>
+            </div>
+        </div>
+
+        <!-- Excel Block Ends Here -->
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="clone_excel_block()">Add Category</button>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" id="load_excel_data" onclick="load_excel_blocks()">Load</button>
+        </div>
+        
+    </div>
+
+</div>
+
+<button class="btn btn-info" onclick="scroll_to_top()" style="position: fixed;bottom: 0px;right: 0px;">Top</button>
+
+<!-- Export Modal -->
+
+<div class="modal fade" id="ExportModal" tabindex="-1" aria-labelledby="ExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ExportModalLabel">Select File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" style="margin-bottom: 20px;">
+                    <input type="text" id="desc_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Description</button></div>
+                    <input type="text" id="quantity_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Quantity</button></div>
+                    <input type="text" id="uom_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">UOM</button></div>
+                    <input type="text" id="dry_price_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Dry Price</button></div>
+                    <input type="text" id="dry_amount_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Dry Amount</button></div>
+                </div>
+                <div class="row" style="margin-bottom: 50px;">
+                    <input type="text" id="sell_price_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Selling Price</button></div>
+                    <input type="text" id="sell_amount_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Selling Amount</button></div>
+                    <input type="text" id="rem_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Remark</button></div>
+                    <input type="text" id="breakdown_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Master Breakdown</button></div>
+                    <input type="text" id="resource_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Resource Sum</button></div>
+                    <input type="text" id="category_value" value="1" hidden>
+                    <div class="col"><button class="btn btn-sm btn-success w-100" onclick="select_export_option(event)">Category Sum</button></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-auto">
+                        <button class="btn btn-primary" onclick="export_boq()">Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal End -->
+<script>
+
+Mousetrap.bind('ctrl+z', function(e) {
+    resetContent();
+    return false;
+});
+
+Mousetrap.bind('ctrl+s', function(e) {
+    save_my_boq();
+    return false;
+});
+
+Mousetrap.bind('ctrl+n', function(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    } else {
+        // internet explorer
+        e.returnValue = false;
+    }
+    $("#AddMasterModal").modal("show");
+    return false;
+});
+
+
+    $(document).click(function(event) {
+        open_drop(event);
+    });
+
+    function open_drop(event){
+        var cls = event.target;
+        if(cls.classList.contains("add_master_resource")){
+            search_for_resource(event);
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+            cls.parentNode.getElementsByClassName("dropdown_content")[0].classList.add("show");
+        }else if(cls.classList.contains("master_select")){
+            var alldrops = document.getElementsByClassName("master_dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+            cls.parentNode.getElementsByClassName("master_dropdown_content")[0].classList.add("show");
+        }else if(cls.classList.contains("master_resource")){
+            search_for_edit_resource(event);
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+            cls.parentNode.getElementsByClassName("dropdown_content")[0].classList.add("show");
+        }
+        else{
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+
+            var alldrops = document.getElementsByClassName("master_dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+        }
+    }
+
+
+    document.addEventListener('keyup', function(event) {
+        if(event.target.classList.contains("add_master_resource")){
+            search_for_resource(event);
+        }
+        if(event.target.classList.contains("master_select")){
+            search_for_master(event);
+        }
+        if(event.target.classList.contains("master_resource")){
+            search_for_edit_resource(event);
+        }
+    });
+
+    function search_for_resource(event){
+        var options = event.target.parentNode.getElementsByClassName("dropdown_content")[0].getElementsByClassName("add_res_option");
+            var txt = event.target.value;
+            var i;
+            for(i=0;i<options.length;i++){
+                if(options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())){
+                    options[i].hidden=false;
+                }else{
+                    options[i].hidden = true;
+                }
+            }
+    }
+
+    function search_for_edit_resource(event){
+        var options = event.target.parentNode.getElementsByClassName("dropdown_content")[0].getElementsByClassName("res_option");
+            var txt = event.target.value;
+            var i;
+            for(i=0;i<options.length;i++){
+                if(options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())){
+                    options[i].hidden=false;
+                }else{
+                    options[i].hidden = true;
+                }
+            }
+    }
+
+    function search_for_master(event){
+        var options = event.target.parentNode.getElementsByClassName("master_dropdown_content")[0].getElementsByClassName("master_option");
+            var txt = event.target.value;
+            var i;
+            for(i=0;i<options.length;i++){
+                if(options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())){
+                    options[i].hidden=false;
+                }else{
+                    options[i].hidden = true;
+                }
+            }
+    }
+
+    function move_down(event){
+        var par = $(event.target).parent().parent().parent();
+        par.insertAfter(par.next());
+    }
+
+    // Toggle the block
+
+    function toggle_block(event){
+        var bb = event.target.parentNode.parentNode.getElementsByClassName("bb_container")[0];
+        var bb_false = event.target.parentNode.parentNode.getElementsByClassName("bb_container_false")[0];
+        if(bb.style.display == "none"){
+            event.target.innerHTML = "Collapse";
+            bb.style.display = "block";
+            bb_false.style.display = "block";
+            bb.nextElementSibling.style.display = "block";
+        }else{
+            event.target.innerHTML = "Expand";
+            bb.style.display = "none";
+            bb_false.style.display = "none";
+            bb.nextElementSibling.style.display = "none";
+        }
+    }
+
+    function collapse_all(){
+        var col_exp = document.getElementById("col_exp").innerHTML;
+        var bb_big = document.getElementsByClassName("bb_container");
+        var bb_false_big = document.getElementsByClassName("bb_container_false");
+
+        var i;
+        for(i=0;i<bb_big.length;i++){
+            if(col_exp == "1"){
+                bb = bb_big[i];
+                bb_false = bb_false_big[i];
+                bb.style.display = "none";
+                bb_false.style.display = "none";
+                bb.nextElementSibling.style.display = "none";
+                document.getElementById("col_exp").innerHTML = "0";
+                document.getElementById("colpbtn").innerHTML = "Expand All";
+                bb.parentNode.getElementsByClassName("toggle_btn")[0].innerHTML = "Expand";
+            }else{
+                bb = bb_big[i];
+                bb_false = bb_false_big[i];
+                bb.style.display = "block";
+                bb_false.style.display = "block";
+                bb.nextElementSibling.style.display = "block";
+                document.getElementById("col_exp").innerHTML = "1";
+                document.getElementById("colpbtn").innerHTML = "Collapse All";
+                bb.parentNode.getElementsByClassName("toggle_btn")[0].innerHTML = "Collapse";
+            }
+        }
+    }
+
+    function select_export_option(event){
+        var current_value = event.target.parentNode.previousElementSibling;
+        if(current_value.value == "1"){
+            current_value.value = "0";
+        }else{
+            current_value.value = "1";
+        }
+
+        if(event.target.classList.contains("btn-success")){
+            event.target.classList.remove("btn-success");
+            event.target.classList.add("btn-secondary");
+        }else{
+            event.target.classList.add("btn-success");
+            event.target.classList.remove("btn-secondary");
+        }
+    }
+
+    function export_boq(){
+        var boqid = document.getElementById("boqid").value;
+
+        var desc_value = document.getElementById("desc_value").value;
+        var quantity_value = document.getElementById("quantity_value").value;
+        var uom_value = document.getElementById("uom_value").value;
+        var dry_price_value = document.getElementById("dry_price_value").value;
+        var dry_amount_value = document.getElementById("dry_amount_value").value;
+        var sell_price_value = document.getElementById("sell_price_value").value;
+        var sell_amount_value = document.getElementById("sell_amount_value").value;
+        var rem_value = document.getElementById("rem_value").value;
+        var breakdown_value = document.getElementById("breakdown_value").value;
+        var resource_value = document.getElementById("resource_value").value;
+        var category_value = document.getElementById("category_value").value;
+
+        var data = boqid + "/" + desc_value + "/" + quantity_value + "/" + uom_value + "/" + dry_price_value + "/" + dry_amount_value +
+         "/" + sell_price_value + "/" + sell_amount_value + "/" + rem_value + "/" + breakdown_value + '/' + resource_value + '/' + category_value;
+
+         $.ajax({
+            url: 'export_boq/',
+            type: 'POST',
+            async: false,
+            data: {data: data},
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function(json){
+                if(json.status == "okay"){
+                    $("#ExportModal").modal("hide");
+                    alert("BOQ Exported");
+                }else{
+                    alert("Please close the excel file first!");
+                }
+            },
+            error: function(xhr, errmsg, err){
+                alert(err);
+            }
+        });
+    }
+</script>
+
+<script>
+    var desc = "";
+    var desc_event = null;
+    if (document.addEventListener) {
+        document.addEventListener('contextmenu', function(e) {
+            if(e.target.classList.contains("excel_comment")){
+                desc = e.target.innerHTML;
+                desc_event = e.target;
+                var mn = document.getElementById("convert_menu");
+                mn.hidden = false;
+                mn.style.top = e.target.offsetTop+"px";
+                mn.style.left = e.target.offsetLeft+"px";
+
+                e.preventDefault();
+            }else if(e.target.classList.contains("excel_desc")){
+                desc = e.target.value;
+                desc_event = e.target;
+                var mn = document.getElementById("convert_menu_billable");
+                mn.hidden = false;
+                mn.style.top = e.target.offsetTop+"px";
+                mn.style.left = e.target.offsetLeft+"px";
+
+                e.preventDefault();
+            }
+            else{
+                var mn = document.getElementById("convert_menu_billable");
+                mn.hidden = true;
+
+                mn = document.getElementById("convert_menu");
+                mn.hidden = true;
+            }
+        }, false);
+    } else {
+        document.attachEvent('oncontextmenu', function() {
+            alert("You've tried to open context menu");
+            window.event.returnValue = false;
+        });
+    }
+
+    $(document).click(function(event) {
+        var mn = document.getElementById("convert_menu");
+        mn.hidden = true;
+    });
+
+    function convert_description(){
+        getContent();
+        var name = document.getElementsByClassName("excel_master_row_container")[0];
+        var clone = name.cloneNode(true);
+        clone.hidden = false;
+        clone.getElementsByClassName("excel_desc")[0].value = desc;
+        $(clone).insertAfter(desc_event);
+        $(desc_event).remove();
+        recalculate_excel_numbering();
+
+        var mn = document.getElementById("convert_menu");
+        mn.hidden = true;
+    }
+
+    function convert_billable(){
+        getContent();
+        var name = document.getElementsByClassName("excel_comment")[0];
+        var clone = name.cloneNode(true);
+        clone.hidden = false;
+        clone.innerHTML = desc;
+        var elm = desc_event.parentNode.parentNode.parentNode;
+        $(clone).insertAfter(elm);
+        $(elm).remove();
+        recalculate_excel_numbering();
+
+        var mn = document.getElementById("convert_menu_billable");
+        mn.hidden = true;
+    }
+</script>
+{% endblock %}

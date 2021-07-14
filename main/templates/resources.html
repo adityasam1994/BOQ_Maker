@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load app_filters %}
+{% block content %}
+
+<div id="overlay">
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="container-fluid" style="padding: 10px 10px 0px 10px;position: fixed;background-color: white;border-bottom: 1px solid;">
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-1">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-3"></div>
+        <div class="col-4 text-center" style="font-size: 30px;font-weight: bold;border-radius: 5px;border: 1px solid;">
+            Resources
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 30px">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" style="border-radius: 50px;" onkeyup="search_resource()" class="form-control w-100" name="search" id="search" placeholder="Search...">
+        </div>
+        <div class="col-6"></div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#resourceModal">Add Resource</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+        <table class="table" style="border: 1px solid white;margin: 0px;">
+            <thead>
+              <tr>
+                <th scope="col" style="width: 5%;">#</th>
+                <th scope="col" style="width: 10%;">Code</th>
+                <th scope="col" style="width: 40%;">Name</th>
+                <th scope="col" style="width: 10%;">Price</th>
+                <th scope="col" style="width: 10%;">Category</th>
+                <th scope="col" style="width: 45%;">Remark</th>
+              </tr>
+            </thead>
+        </table>
+    </div>
+    </div>
+</div>
+<div class="container-fluid" style="padding: 200px 10px 0px 10px">
+    <!-- Modal -->
+    <div class="modal fade" id="resourceModal" tabindex="-1" aria-labelledby="resourceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 1050;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resourceModalLabel">Add Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="" style="margin-top: 10px;">Resource Code</label>
+                <input type="text" class="form-control form-control-sm" id="resourcecode"  placeholder="Resource code">
+                <label for="" style="margin-top: 10px;">Resource Name</label>
+                <input type="text" class="form-control form-control-sm" id="resourcename"  placeholder="Resource Name">
+                <label for="" style="margin-top: 10px;">Unit Price</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="resourceprice" value="0">
+                <label for="" style="margin-top: 10px;">Category</label>
+                <select class='form-control form-control-sm' id="resourcecategory" style="width: 100%;">
+                    <option value='select'>Category...</option>
+                    <option value='material' class="option">Material</option>
+                    <option value='labour' class="option">Labour</option>
+                    <option value='accessory' class="option">Accessory</option>
+                    <option value='subcontract' class="option">Sub Contractor</option>
+                    <option value='tool' class="option">Tool</option>
+                    <option value='priliminary' class="option">Priliminary</option>
+                    <option value='staff' class="option">Staff</option>
+                    <option value='temporary' class="option">Temporary</option>
+                </select>
+                <label for="" style="margin-top: 10px;">Remark</label>
+                <textarea name="boqdesc" id="resremark" class="form-control form-control-sm" rows="5"></textarea>
+                <input type="button" onclick="create_new_resource()" value="Create" style="margin-top: 20px;" class="btn btn-primary">
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <!-- <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Code</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Remark</th>
+                  </tr>
+                </thead> -->
+                <tbody>
+                {% for resource in resources %}
+                  <tr style="cursor: pointer;" data-bs-toggle="modal" class="table_row" id="tabelRow{{resource.id}}" data-bs-target="#editModal{{resource.id}}">
+                    <input type="text" id="id{{resource.id}}" class="tri" style="display: none;">
+                    <th style="width: 5%;" scope="row" class="row_num trh">{{ forloop.counter }}</th>
+                    <td style="width: 10%;" id="rowcode{{resource.id}}" class="trh">{{resource.code}}</td>
+                    <td style="width: 40%;" id="rowname{{resource.id}}" class="trh">{{resource.name}}</td>
+                    <td style="width: 10%;" id="rowprice{{resource.id}}" class="trh">{{resource.price|comma_sep}}</td>
+                    <td style="width: 10%;" id="rowcategory{{resource.id}}" class="trh">{{resource.category}}</td>
+                    <td style="width: 45%;" id="rowremark{{resource.id}}" class="trh">{{resource.remark}}</td>
+                  </tr>
+
+                  <!-- Modal -->
+                    <div class="modal fade mmodal" id="editModal{{resource.id}}" tabindex="-1" aria-labelledby="editModalLabel{{resource.id}}"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel{{resource.id}}">Edit Resource</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="">Resource Code</label>
+                                <input type="text" class="form-control form-control-sm" name="code" id="code{{resource.id}}" value="{{resource.code}}" placeholder="Resource code">
+                                <label for="" style="margin-top: 10px;">Resource Name</label>
+                                <input type="text" class="form-control form-control-sm" name="name" id="name{{resource.id}}" value="{{resource.name}}" placeholder="Resource Name" >
+                                <label for="" style="margin-top: 10px;">Unit Price</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" name="price" id="price{{resource.id}}" value="{{resource.price}}">
+                                <label for="" style="margin-top: 10px;">Category</label>
+                                <select class='form-control form-control-sm' id="category{{resource.id}}" style="width: 100%;">
+                                    <option value='select'>Category...</option>
+                                    <option value='material' {% ifequal resource.category 'material' %} selected {% endifequal %} class="option">Material</option>
+                                    <option value='labour' {% ifequal resource.category 'labour' %} selected {% endifequal %} class="option">Labour</option>
+                                    <option value='accessory' {% ifequal resource.category 'accessory' %} selected {% endifequal %} class="option">Accessory</option>
+                                    <option value='suncontract' {% ifequal resource.category 'subcontract' %} selected {% endifequal %} class="option">Sub Contractor</option>
+                                    <option value='tool' {% ifequal resource.category 'tool' %} selected {% endifequal %} class="option">Tool</option>
+                                    <option value='priliminary' {% ifequal resource.category 'priliminary' %} selected {% endifequal %} class="option">Priliminary</option>
+                                    <option value='staff' {% ifequal resource.category 'staff' %} selected {% endifequal %} class="option">Staff</option>
+                                    <option value='temporary' {% ifequal resource.category 'temporary' %} selected {% endifequal %} class="option">Temporary</option>
+                                </select>
+                                <label for="" style="margin-top: 10px;">Remark</label>
+                                <textarea id="remark{{resource.id}}" class="form-control form-control-sm" rows="5">{{resource.remark}}</textarea>
+                                <input type="button" onclick="delete_resource_db(event)" value="Delete" style="margin-top: 20px;" class="btn btn-danger">
+                                <input type="button" onclick="update_resource('{{resource.id}}')" value="Update" style="margin-top: 20px;" class="btn btn-primary">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                </tbody>
+              </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.onreadystatechange = () => {
+    if (document.readyState === 'complete') {
+        removeloading();
+    }
+    };
+
+    Mousetrap.bind('ctrl+n', function(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            // internet explorer
+            e.returnValue = false;
+        }
+        $("#resourceModal").modal("show");
+        return false;
+    });
+</script>
+
+<script>
+    function search_resource(){
+        var inputVal = document.getElementById("search").value.toLowerCase();
+        var all_rows= document.getElementsByClassName("table_row");
+        var i;
+        for(i=0;i<all_rows.length;i++){
+            var code = all_rows[i].innerHTML.toLowerCase();
+
+            if(code.includes(inputVal)){
+                all_rows[i].hidden = false;
+            }else{
+                all_rows[i].hidden = true;
+            }
+        }
+    }
+</script>
+
+{% endblock%}

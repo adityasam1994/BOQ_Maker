@@ -1,0 +1,759 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load app_filters %}
+{% block content %}
+
+<input type="text" id="boq_id" value="{{ boqname.id }}" hidden>
+<div class="container-fluid" style="padding: 20px;">
+    <div class="row">
+        <div class="col-12" id="left_pane">
+            <div class="row fixed-top" style="margin: 10px;margin-bottom: 10px;border: 1px solid grey;border-radius: 20px;
+            background-color: white;z-index: 1099;">
+                <div class="col-6" style="font-size: 30px;font-weight: bold;">
+                    {{ boqname.name }}
+                </div>
+
+                <div class="col-4 text-right" style="font-size: 15px;font-weight: bold;">
+                    <p id="gt" style="margin: 0px;">Total (Selling): AED 00.00</p>
+                    <p id="gtd" style="margin: 0px;">Total (Dry): AED 00.00</p>
+                </div>
+
+                <div class="col-2">
+                    <button class="btn btn-sm btn-primary w-100" id="addmaster" style="margin-top:7px" 
+                    data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="clear_inp()">Add New Master
+                        Item</button>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="exampleModal"  aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Add New Master Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="position: static; ">
+                            <form action="" id="addform">
+                                <input type="text" id="mod_type" value="add" hidden>
+                                <input type="text" id="m_id" value="9999999" hidden>
+                                <input type="number" name="rcount" hidden value="1" id="rcount">
+                                <label for="cd">Code</label>
+                                <input type="text" name="cd" id="cd" class="form-control mco" style="margin-bottom: 20px;"
+                                    placeholder="Code">
+                
+                                <label for="nm">Name</label>
+                                <input type="text" name="nm" id="nm" class="form-control mnm" style="margin-bottom: 20px;"
+                                    placeholder="Master Name">
+
+                                <label for="rmk">Remark</label>
+                                <input type="text" name="rmk" id="rmk" class="form-control mrmk" style="margin-bottom: 20px;"
+                                    placeholder="Remark">
+                                
+                                
+                                <div class="row">
+                                    <div class="col-5">
+
+                                    <label for="it1" class="mlb">Resource 1</label>
+                                    <br>
+                                    <select name="it1" id="it1" onchange="setprice_modal(event)" class="select2 form-control mit" 
+                                    style="width:100%;z-index: 999999;">
+                                        <option value="select">Select Resource...</option>
+                                        {% for resource in resources %}
+                                        <option value="{{resource.id}}">{{resource.code}} -- {{ resource.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    </div>
+
+                                    <div class="col-2">
+                                        <label for="qtt1">Quantity</label>
+                                        <input type="number" onchange="inc_qt()" name="qtt1" id="qtt1" class="form-control mqtt" style="margin-bottom: 20px;"
+                                            value="1">
+                                    </div>
+
+                                    <div class="col-2">
+                                        <label for="prc1">Price</label>
+                                        <input type="number" onchange="inc_prc()" step="0.01" name="prc1" id="prc1" class="form-control mprc" style="margin-bottom: 20px;"
+                                            value="0">
+                                    </div>
+
+                                    <div class="col-2">
+                                        <label for="amt1">Amount</label>
+                                        <input type="number" step="0.01" readonly name="amt1" id="amt1" class="form-control mamt" style="margin-bottom: 20px;"
+                                            value="0">
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div class="row">
+                                <div class="col-8">
+                                    <div id="btns">
+                                        <button class="btn btn-sm btn-info" style="margin-top: 20px;" onclick="addres()">Add Resource</button>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <p style="font-weight: bold;font-size: 20px;margin-top: 15px;" id="tot_mod">AED 00.00</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="check_save()">Save</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom: 20px;margin-top: 50px;">
+                <div class="col-8"></div>
+                <div class="col-1">
+                    <label for="f1">Factor 1</label>
+                    <input type="number" name="f1" id="f1" step="0.01" onchange="apply_factor()" value="1" class="form-control form-control-sm">
+                </div>
+                <div class="col-1">
+                    <label for="f2">Factor 2</label>
+                    <input type="number" name="f2" id="f2" step="0.01" onchange="apply_factor()" value="1" class="form-control form-control-sm">
+                </div>
+                <div class="col-1">
+                    <label for="f3">Factor 3</label>
+                    <input type="number" name="f3" id="f3" step="0.01" onchange="apply_factor()" value="1" class="form-control form-control-sm">
+                </div>
+                <div class="col-1">
+                    <label for="f4">Factor 4</label>
+                    <input type="number" name="f4" id="f4" step="0.01" onchange="apply_factor()" value="1" class="form-control form-control-sm">
+                </div>
+            </div>
+
+            <input type="number" id="p_count" value="0" hidden>
+
+            <div class="row">
+                <div class="col">
+                    <div id="itemform" autocomplete="off">
+                        
+                        <!-- <div id="bigblock">
+                            
+                        </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <button type="button" class="btn btn-primary" onclick="additm()">Add Item</button>
+                            </div>
+                            <div class="col-8"></div>
+                            <div class="col-2">
+                                <button type="button" class="btn btn-success w-100">Save BOQ</button>
+                            </div>
+                        </div> -->
+                    </div>
+                    <input type="number" name="catc" id="catc" value="0" hidden>
+                    <button class="btn btn-primary" onclick="add_block()" accesskey="a" data-bs-toggle="tooltip" data-bs-placement="top" title="Alt + A">Add Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="text" name="test" id="test" value="aditya" hidden>
+
+<button onclick="calculateGT()">Click</button>
+
+<script>
+
+    function add_block(){
+        var frm = document.getElementById("itemform");
+        var ncode = document.createElement('div');
+        frm.appendChild(ncode);
+        var catc = parseInt(document.getElementById('catc').value)+1;
+        document.getElementById('catc').value = catc;
+
+        ncode.outerHTML = "<div id='blk"+ catc +"' class='blks' style='border:1px solid grey;border-radius:10px;padding:10px;margin-bottom:10px'> \
+            <p style='display:inline;font-weight:bold'>"+ catc +"</p>\
+        <input type='text' class='form-control w-50' style='margin-bottom: 20px;display:inline; font-weight:bold' \
+         placeholder='Header'><br>\
+         <div class='row' style='padding-left:50px'>\
+            <div class='col-3'>Item Name</div>\
+            <div class='col-1 px-1' style='margin-left:-15px'>Quantity</div>\
+            <div class='col-1 px-1' style='margin-left:1px'>UOM</div>\
+            <div class='col-1 px-1' style='margin-left:2px'>Unit Price</div>\
+            <div class='col-1 px-1' style='margin-left:2px'>Dry Amount</div>\
+            <div class='col-1 px-1' style='margin-left:1px'>Factor</div>\
+            <div class='col-1 px-1' style='margin-left:2px'>Selling Price</div>\
+            <div class='col-1 px-1' style='margin-left:1px'>Selling Amt</div>\
+            <div class='col-1 px-1' style='margin-left:3px'>Remark</div>\
+         </div>\
+         <div class='child_block'></div>\
+         <div class='row' style='padding-left:40px'> \
+            <div class='col-2'>\
+                <button type='button' class='btn btn-info' onclick='additm()' style='margin-left:15px'>Add Item</button>\
+                <input value='blk"+ catc +"' hidden>\
+            </div> \
+            <div class='col-4' style='font-weight:bold;font-size:18px;text-align: right'>Dry Sub Total:</div>\
+            <div class='col-1 sub' id='sub_tot"+ catc +"' style='font-weight:bold'>\
+                AED 00.00\
+            </div>\
+\
+            <div class='col-2' style='font-weight:bold;font-size:18px;text-align: right'>Selling Sub Total:</div>\
+            <div class='col-1 subs' id='sub_tots"+ catc +"' style='font-weight:bold'>\
+                AED 00.00\
+            </div>\
+         </div>\
+         </div>";
+    }
+
+    function clear_inp(){
+        document.getElementById("mod_type").value = "add";
+        var ins = document.getElementsByClassName("new_row");
+        var i;
+        for(i=0;i<100;i++){
+            try{
+                ins[0].remove();
+            }catch(error){
+
+            }
+        }
+        document.getElementById("rcount").value = 1;
+        document.getElementById("cd").value = "";
+        document.getElementById("nm").value = "";
+        document.getElementById("rmk").value = "";
+        document.getElementById("it1").selectedIndex = "0";
+        document.getElementById("tot_mod").innerHTML = "AED: 00.00";
+    }
+
+    function cal_tot_mod(){
+        var amts = document.getElementsByClassName("mamt");
+        var i;
+        var sm=0;
+        for(i=0;i<amts.length;i++){
+            sm = sm + parseFloat(amts[i].value);
+        }
+
+        document.getElementById("tot_mod").innerHTML = "AED: "+Number(sm.toFixed(2));
+    }
+
+    function addres() {
+        var form = document.getElementById("addform");
+        var c = parseInt(document.getElementById("rcount").value) + 1;
+        document.getElementById("rcount").value = c;
+        var reses = document.getElementsByClassName("mamt");
+
+        var newhtml = document.createElement('div');
+        form.appendChild(newhtml);
+        newhtml.outerHTML = "<div class='row new_row' id='row_"+ c +"'> \
+                        <div class='col-5'> \
+                    <label for='it" + c + "'>Resource " + (reses.length+1) + "</label><br> \
+                    <select name='it"+ c + "' id='it" + c + "' class='select2 form-control mit' style='width: 100%' onchange='setprice_modal(event)'> \
+                    <option value='select'>Select Resource...</option> \
+                    {% for resource in resources %}\
+                    <option value='{{resource.id}}'>{{resource.code}} -- {{ resource.name }}</option>\
+                    {% endfor %} \
+                </select></div> \
+                <div class='col-2'> \
+                    <label for='qtt"+c+"'>Quantity</label> \
+                    <input type='number' onchange='inc_qt()' name='qtt"+c+"' id='qtt"+c+"' class='form-control mqtt' style='margin-bottom: 20px;' \
+                    value='1'> \
+                </div> \
+            <div class='col-2'> \
+                <label for='prc"+ c +"'>Price</label> \
+                <input type='number' onchange='inc_prc()' step='0.01' name='prc"+ c +"' id='prc"+ c +"' class='form-control mprc' style='margin-bottom: 20px;' \
+                    value='0'> \
+            </div> \
+            <div class='col-2'> \
+                <label for='amt"+ c +"'>Amount</label> \
+                <input type='number' step='0.01' readonly name='amt"+ c +"' id='amt"+ c +"' class='form-control mamt' style='margin-bottom: 20px;' \
+                    value='0'> \
+            </div> \
+            <div class='col-1'> \
+                <img src='{% static 'img/cross.png' %}' onclick='rem_res("+ c +")' style='width: 20px'> \
+            </div> \
+                </div>";
+
+        $('.select2').select2();
+    }
+
+    function rem_res(i){
+        document.getElementById("row_"+i).remove();
+        cal_tot_mod();
+    }
+
+    function calculateGT() {
+        var frm = document.getElementById("itemform");
+        var sm = 0;
+        var smd=0;
+        var ams = frm.getElementsByClassName("sls");
+        var amsg = frm.getElementsByClassName("ams");
+
+        var i;
+        for (i = 0; i < ams.length; i++) {
+            sm = sm + parseFloat(ams[i].value);
+        }
+
+        alert(sm);
+
+        var j;
+        for (j = 0; j < amsg.length; j++) {
+            smd = smd + parseFloat(amsg[j].value);
+        }
+        document.getElementById("gt").innerHTML = "Total (Selling): AED " + Number((sm).toFixed(2));
+        document.getElementById("gtd").innerHTML = "Total (Dry): AED " + Number((smd).toFixed(2));
+
+        var blks = document.getElementsByClassName('blks');
+
+        var k;
+        for(k=0;k<blks.length;k++){
+            var drys = blks[k].getElementsByClassName("ams");
+            sm=0;
+            var l;
+            for(l=0;l<drys.length;l++){
+                sm = sm + parseFloat(drys[l].value);
+            }
+            blks[k].getElementsByClassName('sub')[0].innerHTML = "AED: "+ Number(sm.toFixed(2));
+        }
+
+        for(k=0;k<blks.length;k++){
+            var sells = blks[k].getElementsByClassName("sls");
+            sm=0;
+            var l;
+            for(l=0;l<sells.length;l++){
+                sm = sm + parseFloat(sells[l].value);
+            }
+            blks[k].getElementsByClassName('subs')[0].innerHTML = "AED: "+ Number(sm.toFixed(2));
+        }
+    }
+
+    function changeamount() {
+        var iid = (event.target.id).replace("qt", "");
+        var qt = event.target.value;
+        document.getElementById("amount" + iid).value = Number((parseInt(qt) * parseFloat(document.getElementById("price" + iid).value)).toFixed(2));
+        apply_factor();
+        calculateGT();
+    }
+
+    function setprice(event) {
+        var iid = (event.target.value);
+        var sid = parseInt((event.target.id).replace("m", ""));
+        var qt = parseInt(document.getElementById("qt" + sid).value);
+
+        var bid = document.getElementById("boq_id").value;
+
+        $.ajax({
+            url: "get_price/", // the endpoint
+            type: "POST", // http method
+            data: { iid: iid+"/"+bid }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                //qt = qt +1;
+                document.getElementById("qt" + sid).value = qt;
+                document.getElementById("price" + sid).value = json.price;
+                document.getElementById("amount" + sid).value = json.price * qt;
+                apply_factor();
+                calculateGT();
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+    }
+
+    function inc_qt(){
+        var iid = event.target.id.replace("qtt","");
+        var pc = parseFloat(document.getElementById("prc" + iid).value);
+        var qt = parseInt(event.target.value);
+   
+        document.getElementById("amt" + iid).value = Number((pc * qt)).toFixed(2);
+
+        cal_tot_mod();
+    }
+
+    function inc_prc(){
+        var iid = event.target.id.replace("prc","");
+        var qt = parseInt(document.getElementById("qtt" + iid).value);
+        var pc = parseFloat(event.target.value);
+   
+        document.getElementById("amt" + iid).value = Number((pc * qt)).toFixed(2);
+        cal_tot_mod();
+    }
+
+    function setprice_modal(event){
+        var iid = event.target.id.replace("it","");
+        var rid = event.target.value;
+        
+        $.ajax({
+            url: "get_res_price/", // the endpoint
+            type: "POST", // http method
+            data: { iid: rid }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                var qt = parseInt(document.getElementById("qtt" + iid).value);
+                document.getElementById("prc" + iid).value = json.price;
+                document.getElementById("amt" + iid).value = json.price * qt;
+
+                cal_tot_mod();
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+    }
+
+    function additm() {
+        var bid = event.target.nextElementSibling.value;
+        var pc = parseInt(document.getElementById("p_count").value) + 1;
+        document.getElementById("p_count").value = pc;
+        var cd = "";
+
+        var child_count = parseInt(document.getElementById(bid).getElementsByClassName("sls").length)+1;
+
+        $.ajax({
+            url: "update_items/", // the endpoint
+            type: "POST", // http method
+            data: { iid: "test" }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                var form = document.getElementById(bid).getElementsByClassName("child_block")[0];
+                var newhtml = document.createElement('div');
+                form.appendChild(newhtml);
+
+                var spl = json.bdata.split("..!!..");
+                var x;
+                if(json.bdata.length > 0){
+                    for (x = 0; x < spl.length; x++) {
+                        var nsp = spl[x].split("__//__");
+
+                        cd = cd + "<option value='" + nsp[0] + "' id='i"+ pc +"_" + nsp[0] + "' class='itms'>" + nsp[1] + " -- " + nsp[2] + "</option>";
+                    }
+                }
+
+                newhtml.outerHTML = "<div class='row' style='padding-left:30px'> "+bid.replace('blk','')+"."+ child_count +"\
+                                <div class='col'> \
+                                    <input type='text' value='9999999' id='mid"+ pc +"' hidden>\
+                                    <label for='m"+ pc + "' hidden>Item Name</label> \
+                                    <select onchange='setprice(event)' name='m"+ pc + "' id='m" + pc + "' class='select2 form-control drops' style='width: 100%;'> \
+                                        <option value='select'>Select Item...</option>"+ cd + " \
+                                    </select> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='qt"+ pc + "' hidden>Quantity</label> \
+                                    <input type='number' onchange='changeamount()' id='qt"+ pc + "' class='form-control' name='qt" + pc + "' value='1' \
+                                        style='margin-bottom: 10px;'> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='uom"+ pc + "' hidden>UOM</label> \
+                                    <select name='uom"+ pc + "' id='uom" + pc + "' class='form-control' style='width: 100%;'> \
+                                        <option value='nos'>Nos</option>\
+                                        <option value='kg'>Kg</option>\
+                                        <option value='ls'>L/S</option>\
+                                        <option value='m'>m</option>\
+                                        <option value='sqm'>Sq.m.</option>\
+                                        <option value='set'>Set</option>\
+                                        <option value='unit'>Unit</option>\
+                                    </select> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='price"+ pc + "' hidden>Unit Price</label> \
+                                    <input type='number' step='0.01' id='price"+ pc + "' onclick='edit_master()' readonly name='price" + pc + "' class='form-control' value='0'> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='amount"+ pc + "' hidden>Dry Amount</label> \
+                                    <input type='number' step='0.01' id='amount"+ pc + "' name='amount" + pc + "' readonly class='form-control ams' value='0'> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='factor"+ pc + "' hidden>Factor</label> \
+                                    <select onchange='apply_factor()' name='factor"+ pc + "' id='factor" + pc + "' class='form-control' style='width: 100%;'> \
+                                        <option value='f1'>Factor 1</option>\
+                                        <option value='f2'>Factor 2</option>\
+                                        <option value='f3'>Factor 3</option>\
+                                        <option value='f4'>Factor 4</option>\
+                                    </select> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='sellp"+ pc + "' hidden>Selling Price</label> \
+                                    <input type='number' step='0.01' id='sellp"+ pc + "' name='sellp" + pc + "' readonly class='form-control slsp' value='0'> \
+                                </div> \
+                                <div class='col-1 px-1'> \
+                                    <label for='sell"+ pc + "' hidden>Selling Amt</label> \
+                                    <input type='number' step='0.01' id='sell"+ pc + "' name='sell" + pc + "' readonly class='form-control sls' value='0'> \
+                                </div> \
+                                <div class='col-2 px-1'> \
+                                    <label for='remark"+ pc + "' hidden>Remark</label> \
+                                    <input type='text' id='remark"+ pc + "' class='form-control' name='remark" + pc + "' placeholder='Remark' \
+                                        style='margin-bottom: 10px;'> \
+                                </div> \
+                                <div id='block1_box' style='margin-left: 20px;'> \
+                                </div> \
+                            </div>";
+
+                $('.select2').select2();
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+    }
+
+    function edit_master(){
+        clear_inp();
+        var iid = (event.target.id).replace("price","");
+        var real_id = document.getElementById("m"+iid).value;
+        var bid = document.getElementById("boq_id").value;
+        document.getElementById("mod_type").value = "edit";
+        
+        $.ajax({
+            url: "edit_master/", // the endpoint
+            type: "POST", // http method
+            data: { data: real_id+"/"+bid }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                var bigdata = (json.data);
+                var fsplit = bigdata.split("||");
+                var prim = fsplit[0];
+                var comp = fsplit[1]
+
+                //Setting prime data
+                var prim_split = prim.split(",,")
+                var mod = document.getElementById("exampleModal");
+                mod.getElementsByClassName("mco")[0].value = prim_split[0];
+                mod.getElementsByClassName("mnm")[0].value = prim_split[1];
+                mod.getElementsByClassName("mrmk")[0].value = prim_split[2];
+                document.getElementById("m_id").value = prim_split[3];
+
+                //Setting Resources
+                var res_split = comp.split("//")
+                var its = mod.getElementsByClassName("mit");
+                var prcs = mod.getElementsByClassName("mprc");
+                var amts = mod.getElementsByClassName("mamt");
+                var qtss = mod.getElementsByClassName("mqtt");
+
+                $("#exampleModal").modal("show");
+
+                var r1sp = res_split[0].split(",,");
+                its[0].value = r1sp[0];
+                qtss[0].value = r1sp[3];
+                prcs[0].value = r1sp[4];
+                amts[0].value = r1sp[5];
+                
+                if(res_split.length > 1){
+                    var i;
+                    for(i=1;i<res_split.length;i++){
+                        addres();
+                        r1sp = res_split[i].split(",,");
+                        its[i].value = r1sp[0];
+                        qtss[i].value = r1sp[3];
+                        prcs[i].value = r1sp[4];
+                        amts[i].value = r1sp[5];
+                    }
+                }
+                cal_tot_mod();
+                $('.select2').select2();
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+
+    }
+
+    function apply_factor(){
+        var i;
+        for(i=0;i<5000;i++){
+            try{
+                var v = document.getElementById(document.getElementById("factor"+i).value).value * document.getElementById("amount"+i).value;
+                var pc = document.getElementById(document.getElementById("factor"+i).value).value * document.getElementById("price"+i).value;
+                document.getElementById("sell"+i).value = Number(v.toFixed(2));
+                document.getElementById("sellp"+i).value = Number(pc.toFixed(2));
+            }catch(error){
+
+            }
+        }
+        calculateGT();
+    }
+
+</script>
+<script>
+    $('.select2').select2();
+</script>
+<script>
+    function check_save(){
+        var ch = document.getElementById("mod_type").value;
+        if(ch == "add"){
+            savemaster();
+        }else{
+            updatemaster();
+        }
+    }
+
+    function updatemaster() {
+        var mid = document.getElementById("m_id").value;
+        var b_id = document.getElementById("boq_id").value;
+        var data = document.getElementById("nm").value;
+        var cd = document.getElementById("cd").value;
+        var rk = document.getElementById("rmk").value;
+
+        data = data + "___" + cd + "___" + rk + "___" + mid +"___" + b_id;
+        var c = parseInt(document.getElementById("rcount").value);
+
+        var i;
+        for (i = 1; i < c + 1; i++) {
+            var st = "it" + i;
+            try{
+                data = data + "___" + document.getElementById(st).value + ",," + document.getElementById("qtt"+i).value + ",," + 
+                document.getElementById("prc"+i).value + ",," + document.getElementById("amt"+i).value;
+            }catch(error){
+
+            }
+        }
+
+        var drops = document.getElementsByClassName("drops");
+        var k;
+        var idcon = [];
+        var vi = [];
+        for (k = 0; k < drops.length; k++) {
+            idcon.push(drops[k].id);
+            vi.push(drops[k].selectedIndex);
+            var itms = drops[k].getElementsByClassName("itms");
+            var z;
+            var idc = [];
+            for (z = 0; z < itms.length; z++) {
+                idc.push(itms[z].id);
+            }
+
+            var n;
+            for (n = 0; n < idc.length; n++) {
+                document.getElementById(idc[n]).remove();
+            }
+        }
+
+        $.ajax({
+            url: "updatemaster/", // the endpoint
+            type: "POST", // http method
+            data: { data: data }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                for (k = 0; k < drops.length; k++) {
+                    var v = document.getElementById(idcon[k]).selectedIndex;
+                    
+                    var spl = json.bdata.split("..!!..");
+                    var x;
+                    for (x = 0; x < spl.length; x++) {
+                        var nsp = spl[x].split("__//__");
+
+                        var newhtml = document.createElement('div');
+
+                        drops[k].appendChild(newhtml);
+                        newhtml.outerHTML = "<option value='" + nsp[0] + "' id='i_" + x + "' class='itms'>" + nsp[1] + " -- " + nsp[2];
+
+                    }
+
+                    drops[k].selectedIndex = parseInt(vi[k]);
+                }
+                $('.select2').select2();
+                $("#exampleModal").modal("hide");
+                document.getElementById("prc")
+                //alert("Saved");
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+    };
+
+    function savemaster() {
+        var data = document.getElementById("nm").value;
+        var cd = document.getElementById("cd").value;
+        var rk = document.getElementById("rmk").value;
+        data = data + "___" + cd + "___" + rk;
+        var c = parseInt(document.getElementById("rcount").value);
+
+        var i;
+        for (i = 1; i < c + 1; i++) {
+            var st = "it" + i;
+            try{
+                data = data + "___" + document.getElementById(st).value + ",," + document.getElementById("qtt"+i).value + ",," + 
+                document.getElementById("prc"+i).value + ",," + document.getElementById("amt"+i).value;
+            }catch(error){
+
+            }
+        }
+
+        var drops = document.getElementsByClassName("drops");
+        var k;
+        var idcon = [];
+        var vi = [];
+        for (k = 0; k < drops.length; k++) {
+            idcon.push(drops[k].id);
+            vi.push(drops[k].selectedIndex);
+            var itms = drops[k].getElementsByClassName("itms");
+            var z;
+            var idc = [];
+            for (z = 0; z < itms.length; z++) {
+                idc.push(itms[z].id);
+            }
+
+            var n;
+            for (n = 0; n < idc.length; n++) {
+                document.getElementById(idc[n]).remove();
+            }
+        }
+
+        $.ajax({
+            url: "savemaster/", // the endpoint
+            type: "POST", // http method
+            data: { data: data }, // data sent with the post request
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            // handle a successful response
+            success: function (json) {
+                for (k = 0; k < drops.length; k++) {
+                    var v = document.getElementById(idcon[k]).selectedIndex;
+                    
+                    var spl = json.bdata.split("..!!..");
+                    var x;
+                    for (x = 0; x < spl.length; x++) {
+                        var nsp = spl[x].split("__//__");
+
+                        var newhtml = document.createElement('div');
+
+                        drops[k].appendChild(newhtml);
+                        newhtml.outerHTML = "<option value='" + nsp[0] + "' id='i_" + x + "' class='itms'>" + nsp[1] + " -- " + nsp[2];
+
+                    }
+
+                    drops[k].selectedIndex = parseInt(vi[k]) + 1;
+                }
+                $('.select2').select2();
+                $("#exampleModal").modal("hide");
+                //alert("Saved");
+            },
+
+            // handle a non-successful response
+            error: function (xhr, errmsg, err) {
+                //alert("Error "+xhr + err);
+            }
+        });
+    };
+</script>
+
+<script>
+    $(document).ready(function () {
+        $("#left_pane").css({ 'height': screen.height });
+    });
+</script>
+
+{% endblock %}

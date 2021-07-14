@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- <div id="overlay">
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div> -->
+
+<div class="shadow text-center tst">
+
+    BOQ Saved
+
+</div>
+
+{{data}}
+
+<div class="container-fluid" style="padding-top: 20px;">
+    <div class="row shadow toprow">
+        <div class="col-auto my-auto">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-4 boqname" id="boqname">
+            {{ boq.name }}
+        </div>
+
+        <textarea id="datatext" cols="30" rows="10" hidden>{{ excel_data.data }}</textarea>
+
+        <div class="col-3" id="boq_total">
+            Total Selling: AED 00.00 <br>
+            Total Dry: AED 00.00
+        </div>
+        <input type="text" id="boqid" value="{{ boq.id }}" hidden>
+        <input type="text" id="modal_type" value="add" hidden>
+
+        <div class="col-2">
+            <input type="file" name="excelfile" id="excelfile" hidden>
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#excelModal" style="margin-top: 5px;">Upload BOQ</button>
+        </div>
+
+        <div class="col-2">
+            <button class="btn btn-primary w-100" style="margin-top: 5px;" onclick="open_master_modal('boq')">
+                Add New Master Item</button>
+        </div>
+
+        
+    </div>
+
+    <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="excelModalLabel">Select File</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'excel_boq' boq.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="file" id="uploaded_file" name="uploaded_file" class="form-control">
+                    <p style="font-weight: bold;margin-top: 30px;margin-bottom: 0px;">Enter the respective column numbers</p>
+                    <div class="row">
+                        <div class="col">
+                            <label for="">Heading</label>
+                            <input type="number" class="form-control" name="heading_number" id="heading_number">
+                        </div>
+                        <div class="col">
+                            <label for="">Description</label>
+                            <input type="number" class="form-control" name="desc_number" id="desc_number">
+                        </div>
+                        <div class="col">
+                            <label for="">Quantity</label>
+                            <input type="number" class="form-control" name="quantity_number" id="quantity_number">
+                        </div>
+                        <div class="col">
+                            <label for="">UOM</label>
+                            <input type="number" class="form-control" name="uom_number" id="uom_number">
+                        </div>
+                    </div>
+                    <input type="submit" value="Open" class="btn btn-success" style="margin-top: 20px;">
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Modal -->
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="MasterModal"
+    aria-labelledby="MasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="MasterModalLabel">Master Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="position: static; ">
+                <input type="text" id="modal_code" class="form-control modal_field" placeholder="Code">
+                <input type="text" id="modal_name" class="form-control modal_field" placeholder="Master Name">
+                <input type="text" id="modal_remark" class="form-control modal_field" placeholder="Remark">
+                <input type="text" id="modal_id" value="999999" hidden>
+
+                <div class="labels">
+                    <div class="row" style="font-weight: bold;">
+                        <div class="col-6">
+                            Resource
+                        </div>
+                        <div class="col-1">
+                            Quantity
+                        </div>
+                        <div class="col-2">
+                            Price
+                        </div>
+                        <div class="col-2">
+                            Amount
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal_master_container">
+                    <div class="row modal_resource_row">
+                        <div class="col-6">
+                            <select class='form-control form-control-sm master_resource'
+                                onchange="set_modal_res_price(event)" style="width: 100%;">
+                                <option value='select'>Select Resource...</option>
+                                {% for resource in resources %}
+                                <option value='{{resource.id}}' class="option">{{resource.code}} /
+                                    {{resource.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-1">
+                            <input type="number" onchange="calculateAmount()"
+                                class="master_quantity form-control" value="1">
+                        </div>
+                        <div class="col-2">
+                            <input type="number" id="modal_price1" onchange="calculateAmount()" step="0.01"
+                                class="master_price form-control" value="0" readonly>
+                        </div>
+                        <div class="col-2">
+                            <input type="number" class="master_amount form-control" step="0.01" value="0"
+                                readonly>
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-9">
+                        <button class="btn btn-info" onclick="clone_resource('readonly')">Add Resource</button>
+                    </div>
+                    <div class="col-3">
+                        <p id="master_total">AED 00.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="clear_modal()">Clear</button>
+                <button type="button" class="btn btn-primary" onclick="save_master(0,'boq')">Save</button>
+                <!-- <button type="button" class="btn btn-primary" id="save_as_new" onclick="save_as_new_master()">Save As New</button> -->
+                <button type="button" class="btn btn-primary" id="savenext" onclick="save_master(1, 'boq')">Save & Next</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row" style="margin-top: 50px;">
+        <div class="col-8 my-auto">
+            <button class="btn btn-dark">Export BOQ</button>
+        </div>
+
+        <div class="col-1">
+            <label for="f1">Factor 1</label>
+            <input type="number" name="f1" id="f1" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor1 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f2">Factor 2</label>
+            <input type="number" name="f2" id="f2" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor2 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f3">Factor 3</label>
+            <input type="number" name="f3" id="f3" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor3 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f4">Factor 4</label>
+            <input type="number" name="f4" id="f4" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor4 }}" class="form-control form-control-sm">
+        </div>
+    </div>
+    <div id="bigblock" style="margin-top: 10px;">
+
+        <!-- Excel Block Starts Here -->
+
+        <div class='row excel_row' style='margin-top: 10px;' hidden> 
+            <div class='bb'> 
+                <p class='excel_heading_number'>1</p> 
+                <input type='text' class='excel_heading form-control' placeholder='Heading' style='font-weight:bold'> 
+                <div style='margin-left:200px' class='detail_row' onclick='delete_excel_category(event)'>x</div>
+                <div style='margin-left:200px' class='detail_row'>
+                <button class='btn btn-sm btn-secondary toggle_btn' onclick='toggle_block(event)'>Collapse</button>
+                </div>
+                <div class='detail_row topdetail' style='border:1px solid;border-radius:5px;padding-left:10px;padding-right:10px'>Dry: AED 00.00  /  Selling: AED 00.00</div>
+                <div class='bb_container_false' style='display:block'> 
+                <div style='float:left;visibility:hidden'>1.12</div> 
+                <div class='row' hidden>
+                <div class='col-2 field_name px-0'>Description</div>
+                <div class='col-1 field_name'>Quantity</div>
+                <div class='col-1 field_name px-0'>UOM</div>
+                <div class='col-1 field_name'>Rate</div>
+                <div class='col-1 field_name px-0'>Amount</div>
+                <div class='col-1 field_name'>Factor</div>
+                <div class='col-1 field_name px-0'>Sell Rate</div>
+                <div class='col-1 field_name'>Sell Amount</div>
+                <div class='col-2 field_name px-0'>Remark</div>
+                </div>
+                </div>
+                <br>
+                <div class='bb_container' style='display:block'>
+                    <h6 style="margin-left: 40px;" class="excel_comment" hidden>This is a description from the boq provided by the client</h6>
+                    <div class="excel_master_row_container" hidden>
+                
+                <div class='excel_item_number' style='float:left;width: 40px;'>1.1</div> 
+                    <div class='row child_rows'> 
+                        <div class='col-2 px-0 select_column'> 
+                            <input type='text' class='form-control form-control-sm excel_desc' placeholder='Description'>
+                        </div> 
+                        <div class='col-1'> 
+                            <input type='number' class='form-control form-control-sm excel_quantity' onchange='calculate_boq_total()' value='1'> 
+                        </div> 
+                        <div class='col-1 px-0'> 
+                            <input type='text' class='form-control form-control-sm excel_uom' placeholder='UOM'>
+                            <!-- <select class='form-control form-control-sm excel_uom' style='width: 100%;'> 
+                                <option value='nos'>Nos</option> 
+                                <option value='kg'>Kg</option> 
+                                <option value='ls'>L/S</option> 
+                                <option value='m'>m</option> 
+                                <option value='sqm'>Sq.m.</option>
+                                <option value='set'>Set</option>
+                                <option value='unit'>Unit</option>
+                            </select> -->
+                        </div>
+                        <div class='col-1'>
+                            <input type='number' class='form-control form-control-sm excel_price' readonly onmousedown='isKeyPressed(event)' step='0.01' onchange='calculate_boq_total()' value='0'>
+                        </div>
+                        <div class='col-1 px-0'>
+                            <input type='number' class='form-control form-control-sm excel_amount' step='0.01' readonly value='0'>
+                        </div>
+                        <div class='col-1'>
+                            <select class='form-control form-control-sm excel_factor' onchange='calculate_boq_total()'>
+                                <option value='f1'>Factor 1</option>
+                                <option value='f2'>Factor 2</option>
+                                <option value='f3'>Factor 3</option>
+                                <option value='f4'>Factor 4</option>
+                            </select>
+                        </div>
+                        <div class='col-1 px-0'>
+                            <input type='number' class='form-control form-control-sm excel_sell_price' readonly value='0'>
+                        </div>
+                        <div class='col-1'>
+                            <input type='number' class='form-control form-control-sm excel_sell_amount' readonly value='0'>
+                        </div>
+                        <div class='col px-0'>
+                            <input type='text' class='form-control form-control-sm excel_remark' placeholder='Remark'>
+                        </div>
+                        <div class='col-auto cross' onclick="delete_item(event)" style='font-weight:bold;visibility: hidden;cursor:pointer'>x</div>
+                    </div>
+                </div>
+                </div>
+                <button class='btn btn-info' style='margin-left: 15px;' onclick='clone_excel_master()'>Add Item</button>
+            </div>
+        </div>
+
+        <!-- Excel Block Ends Here -->
+
+        <!-- Sample Block Start -->
+
+        <div class='row first_master' style='margin-top: 10px;' hidden> 
+            <div class='bb'> 
+                <p class='heading_number'>1</p> 
+                <input type='text' class='heading form-control' placeholder='Heading' style='font-weight:bold'> 
+                <div style='margin-left:200px' class='detail_row' onclick='delete_category(event)'>x</div>
+                <div style='margin-left:200px' class='detail_row'>
+                <button class='btn btn-sm btn-secondary toggle_btn' onclick='toggle_block(event)'>Collapse</button>
+                </div>
+                <div class='detail_row topdetail' style='border:1px solid;border-radius:5px;padding-left:10px;padding-right:10px'>Dry: AED 00.00  /  Selling: AED 00.00</div>
+                <div class='bb_container_false' style='display:block'> 
+                <div style='float:left;visibility:hidden'>1.11</div> 
+                <div class='row'>
+                <div class='col-2 field_name px-0'>Master Item</div>
+                <div class='col-1 field_name'>Quantity</div>
+                <div class='col-1 field_name px-0'>UOM</div>
+                <div class='col-1 field_name'>Rate</div>
+                <div class='col-1 field_name px-0'>Amount</div>
+                <div class='col-1 field_name'>Factor</div>
+                <div class='col-1 field_name px-0'>Sell Rate</div>
+                <div class='col-1 field_name'>Sell Amount</div>
+                <div class='col-2 field_name px-0'>Remark</div>
+                </div>
+                </div>
+                <br>
+                <div class='bb_container' style='display:block'>
+                <div class="master_row_container">
+                <div class='item_number' style='float:left'>1.1</div> 
+                    <div class='row child_rows'> 
+                        <div class='col-2 px-0 select_column'> 
+                        <select class='form-control form-control-sm master' style="width: 100%;" onchange='set_master_price(event)'>
+                            
+                        </select>
+                    </div> 
+                        <div class='col-1'> 
+                            <input type='number' class='form-control form-control-sm quantity' onchange='calculate_boq_total()' value='1'> 
+                        </div> 
+                        <div class='col-1 px-0'> 
+                            <select class='form-control form-control-sm uom' style='width: 100%;'> 
+                                <option value='nos'>Nos</option> 
+                                <option value='kg'>Kg</option> 
+                                <option value='ls'>L/S</option> 
+                                <option value='m'>m</option> 
+                                <option value='sqm'>Sq.m.</option>
+                                <option value='set'>Set</option>
+                                <option value='unit'>Unit</option>
+                            </select>
+                        </div>
+                        <div class='col-1'>
+                            <input type='number' class='form-control form-control-sm price' readonly onmousedown='isKeyPressed(event)' step='0.01' onchange='calculate_boq_total()' value='0'>
+                        </div>
+                        <div class='col-1 px-0'>
+                            <input type='number' class='form-control form-control-sm amount' step='0.01' readonly value='0'>
+                        </div>
+                        <div class='col-1'>
+                            <select class='form-control form-control-sm factor' onchange='calculate_boq_total()'>
+                                <option value='f1'>Factor 1</option>
+                                <option value='f2'>Factor 2</option>
+                                <option value='f3'>Factor 3</option>
+                                <option value='f4'>Factor 4</option>
+                            </select>
+                        </div>
+                        <div class='col-1 px-0'>
+                            <input type='number' class='form-control form-control-sm sell_price' readonly value='0'>
+                        </div>
+                        <div class='col-1'>
+                            <input type='number' class='form-control form-control-sm sell_amount' readonly value='0'>
+                        </div>
+                        <div class='col px-0'>
+                            <input type='text' class='form-control form-control-sm remark' placeholder='Remark'>
+                        </div>
+                        <div class='col-auto' style='font-weight:bold;visibility:hidden;cursor:pointer'>x</div>
+                    </div>
+                    </div>
+                </div>
+                <button class='btn btn-info' style='margin-left: 15px;' onclick='clone_master_row()'>Add Item</button>
+            </div>
+        </div>
+
+        <!-- Sample block end -->
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-2">
+            <button class="btn btn-primary" onclick="clone_block()">Add Category</button>
+        </div>
+        <div class="col">
+            <button class="btn btn-primary" onclick="clone_excel_block()">Add Category</button>
+        </div>
+        <div class="col-1">
+            <button class="btn btn-success w-100" onclick="save_with_button()">Save BOQ</button>
+        </div>
+    </div>
+    
+</div>
+
+<button class="btn btn-info" onclick="scroll_to_top()" style="position: fixed;bottom: 0px;right: 0px;">Top</button>
+<!-- <button onclick="clonetest()">test</button> -->
+<script>
+    //window.onload(setTimeout(load_blocks,1000));
+
+    document.onreadystatechange = () => {
+        if (document.readyState === 'complete') {
+            //load_category_blocks();
+            load_excel_blocks();
+
+            Mousetrap.bind('ctrl+s', function(e) {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                } else {
+                    // internet explorer
+                    e.returnValue = false;
+                }
+                save_boq();
+                return false;
+            });
+
+            Mousetrap.bind('ctrl+n', function(e) {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                } else {
+                    // internet explorer
+                    e.returnValue = false;
+                }
+                open_master_modal();
+                return false;
+            });
+        }
+    };
+
+
+    $( document ).ready(function() {
+        reload_resources();
+        reload_masters();
+        reload_select();
+    });
+
+    function open_file(){
+        $("#excelfile").trigger("click");
+    }
+
+    function open_master_list(event){
+        event.target.nextElementSibling.style.display = "block";
+    }
+
+    function hide_master_list(event){
+        event.target.nextElementSibling.style.display = "none";
+    }
+</script>
+
+{% endblock %}

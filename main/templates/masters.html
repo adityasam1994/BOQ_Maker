@@ -1,0 +1,757 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load app_filters %}
+{% block content %}
+
+<div id="overlay">
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="container-fluid" style="padding: 10px;position: fixed;background-color: white;border-bottom: 1px solid;">
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-1">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-3"></div>
+        <div class="col-4 text-center" style="font-size: 30px;font-weight: bold;border-radius: 5px;border: 1px solid;">
+            Master Items
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 30px">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" style="border-radius: 50px;" onkeyup="search_local_master()" class="form-control w-100"
+                name="search" id="search" placeholder="Search...">
+        </div>
+        <div class="col-2"></div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#importModal">Import Master Items</button>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" onclick="export_master()">Export Master Items</button>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100 add_mas">Add New Master Item</button>
+        </div>
+    </div>
+
+    <input type="text" id="row_count" value="{{ masters|length }}" hidden>
+
+</div>
+<div class="container-fluid" style="padding: 170px 10px 0px 10px">
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Remark</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% for master in masters %}
+                    <tr style="cursor: pointer;" class="table_row">
+                        <th style="width: 10%;" scope="row" class="rowid" hidden>{{ master.id }}</th>
+                        <th style="width: 10%;" scope="row" class="rownum">{{ forloop.counter }}</th>
+                        <td style="width: 20%;" class="rowcode">{{master.code}}</td>
+                        <td style="width: 30%;" class="rowname">{{master.name}}</td>
+                        <td style="width: 20%;" class="rowprice">{{master.components|cal_amount}}</td>
+                        <td style="width: 20%;" class="rowremark">{{master.remark}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Update Modal -->
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="MyMasterModal"
+    aria-labelledby="MyMasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="MyMasterModalLabel">Master Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="position: static; ">
+                <label for="">Code</label>
+                <input type="text" id="modal_code" class="form-control modal_field modal_code" placeholder="Code">
+                <label for="">Name</label>
+                <input type="text" id="modal_name" class="form-control modal_field modal_name"
+                    placeholder="Master Name">
+                <label for="">Remark</label>
+                <input type="text" id="modal_remark" class="form-control modal_field modal_remark" placeholder="Remark">
+                <input type="text" id="modal_id" value="999999" hidden>
+
+                <div class="labels">
+                    <div class="row">
+                        <div class="col-4">
+                            Resource
+                        </div>
+                        <div class="col">
+                            Quantity
+                        </div>
+                        <div class="col">
+                            Category
+                        </div>
+                        <div class="col">
+                            Price
+                        </div>
+                        <div class="col">
+                            Amount
+                        </div>
+                        <div class="col">
+                            Remark
+                        </div>
+                        <div class="col-auto" style="visibility: hidden;">x</div>
+                    </div>
+                </div>
+
+                <div class="modal_master_container">
+                    <div class="row modal_resource_row" id="test">
+                        <div class="col-4">
+                            <input type="text" class="selected_resource" hidden>
+                            <input type="text" class="form-control form-control-sm master_resource" placeholder="Select Resource...">
+                            <div id="myDropdown" class="dropdown_content">
+                                {% for resource in resources %}
+                                <option value='{{resource.id}}' onclick="set_res_value(event)" class="res_option">{{resource.code}} / {{resource.name}}</option>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <input type="number" onchange="calculate_local_modal_price()"
+                                class="master_quantity form-control form-control-sm" value="1">
+                        </div>
+                        <div class="col">
+                            <input type="text" class="master_category form-control form-control-sm" readonly>
+                            <!-- <select class='form-control form-control-sm master_category'>
+                            {% for cat in cats %}
+                            <option value='{{cat.category_value}}'>{{cat.category_name}}</option>
+                            {% endfor %}
+                        </select> -->
+                        </div>
+                        <div class="col">
+                            <input type="number" onchange="calculate_local_modal_price()" step="0.01"
+                                class="master_price form-control form-control-sm" value="0" readonly>
+                        </div>
+                        <div class="col">
+                            <input type="number" class="master_amount form-control form-control-sm" step="0.01"
+                                value="0" readonly>
+                        </div>
+
+                        <div class="col">
+                            <input type="text" class="master_remark form-control form-control-sm">
+                        </div>
+                        <div class="col-auto cross" style="cursor: pointer;" onclick="delete_local_resource(event)">x
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-info" onclick="add_local_resource()">Add Resource</button>
+                    </div>
+                    <div class="col-3 text-end">
+                        <p id="master_total">AED 00.00</p>
+                    </div>
+                    <div class="col-auto" style="visibility: hidden;">x</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="clear_local_modal()">Clear</button>
+                <button type="button" class="btn btn-primary" onclick="update_local_master()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Modal End -->
+
+<!-- Add Modal -->
+
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="AddMasterModal"
+    aria-labelledby="AddMasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="AddMasterModalLabel">Master Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="position: static; ">
+                <label for="">Code</label>
+                <input type="text" id="add_modal_code" class="form-control modal_field modal_code" placeholder="Code">
+                <label for="">Name</label>
+                <input type="text" id="add_modal_name" class="form-control modal_field modal_name"
+                    placeholder="Master Name">
+                <label for="">Remark</label>
+                <input type="text" id="add_modal_remark" class="form-control modal_field modal_remark"
+                    placeholder="Remark">
+
+                <div class="labels">
+                    <div class="row">
+                        <div class="col-4">
+                            Resource
+                        </div>
+                        <div class="col">
+                            Quantity
+                        </div>
+                        <div class="col">
+                            Category
+                        </div>
+                        <div class="col">
+                            Price
+                        </div>
+                        <div class="col">
+                            Amount
+                        </div>
+                        <div class="col">
+                            Remark
+                        </div>
+                        <div class="col-auto" style="visibility: hidden;">x</div>
+                    </div>
+                </div>
+
+                <div class="add_modal_master_container">
+                    <div class="row add_modal_resource_row" id="test">
+                        <div class="col-4">
+                            <input type="text" class="add_selected_resource" hidden>
+                            <input type="text" class="form-control form-control-sm add_master_resource" placeholder="Select Master Item...">
+                            <div id="myDropdown" class="dropdown_content">
+                                {% for resource in resources %}
+                                <option value='{{resource.id}}' onclick="set_res_add_value(event)"
+                                    class="add_res_option">{{resource.code}} / {{resource.name}}</option>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <input type="number" onchange="calculate_local_modal_price()"
+                                class="add_master_quantity form-control form-control-sm" value="1" min="1">
+                        </div>
+                        <div class="col">
+                            <input type="text" class="add_master_category form-control form-control-sm" readonly>
+                            <!-- <select class='form-control form-control-sm master_category'>
+                            {% for cat in cats %}
+                            <option value='{{cat.category_value}}'>{{cat.category_name}}</option>
+                            {% endfor %}
+                        </select> -->
+                        </div>
+                        <div class="col">
+                            <input type="number" onchange="calculate_local_modal_price()" step="0.01"
+                                class="add_master_price form-control form-control-sm" value="0" readonly>
+                        </div>
+                        <div class="col">
+                            <input type="number" class="add_master_amount form-control form-control-sm" step="0.01"
+                                value="0" readonly>
+                        </div>
+
+                        <div class="col">
+                            <input type="text" class="add_master_remark form-control form-control-sm">
+                        </div>
+                        <div class="col-auto add_cross" style="cursor: pointer;"
+                            onclick="delete_local_add_resource(event)">x</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-info" onclick="add_local_add_resource()">Add Resource</button>
+                    </div>
+                    <div class="col-3 text-end">
+                        <p id="add_master_total">AED 00.00</p>
+                    </div>
+                    <div class="col-auto" style="visibility: hidden;">x</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="clear_local_add_modal()">Clear</button>
+                <button type="button" class="btn btn-primary" onclick="save_local_master('sv')">Save</button>
+                <button type="button" class="btn btn-primary" id="savenext" onclick="save_local_master('next')">Save &
+                    Next</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal End -->
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importModalLabel">Import Master Items</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'import_masters' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" id="import_file" name="import_file" class="form-control">
+            <input type="submit" value="Import" class="btn btn-success" style="margin-top: 20px;">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal End -->
+<script>
+    document.onreadystatechange = () => {
+        if (document.readyState === 'complete') {
+            removeloading();
+        }
+    };
+
+    Mousetrap.bind('ctrl+n', function (e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        } else {
+            // internet explorer
+            e.returnValue = false;
+        }
+        $("#MasterModal").modal("show");
+        return false;
+    });
+</script>
+
+<script>
+    var clicked_event = null;
+
+    $(document).click(function(event) {
+        open_drop(event);
+    });
+
+    function open_drop(event){
+        var cls = event.target.classList;
+        if(cls.contains("add_mas")){
+            clicked_event = event;
+            open_add_local_master_modal();
+        }
+        if(cls.contains("rowcode") || cls.contains("rowname") || cls.contains("rowprice")){
+            clicked_event = event;
+            open_local_master_edit_modal();
+        }
+
+        var cls = event.target;
+        if(cls.classList.contains("master_resource")){
+            search_for_edit_resource(event);
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+            cls.parentNode.getElementsByClassName("dropdown_content")[0].classList.add("show");
+        }else if(cls.classList.contains("add_master_resource")){
+            search_for_add_resource(event);
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+            cls.parentNode.getElementsByClassName("dropdown_content")[0].classList.add("show");
+        }
+        else{
+            var alldrops = document.getElementsByClassName("dropdown_content");
+            var i;
+            for(i=0;i<alldrops.length;i++){
+                alldrops[i].classList.remove("show");
+            }
+        }
+    }
+
+    document.addEventListener('keyup', function(event) {
+        if(event.target.classList.contains("master_resource")){
+            search_for_edit_resource(event);
+        }
+        if(event.target.classList.contains("add_master_resource")){
+            search_for_add_resource(event);
+        }
+    });
+
+    function search_for_edit_resource(event){
+        var options = event.target.parentNode.getElementsByClassName("dropdown_content")[0].getElementsByClassName("res_option");
+            var txt = event.target.value;
+            var i;
+            for(i=0;i<options.length;i++){
+                if(options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())){
+                    options[i].hidden=false;
+                }else{
+                    options[i].hidden = true;
+                }
+            }
+    }
+
+    function search_for_add_resource(event){
+        var options = event.target.parentNode.getElementsByClassName("dropdown_content")[0].getElementsByClassName("add_res_option");
+            var txt = event.target.value;
+            var i;
+            for(i=0;i<options.length;i++){
+                if(options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())){
+                    options[i].hidden=false;
+                }else{
+                    options[i].hidden = true;
+                }
+            }
+    }
+
+    // Add Methods
+    function open_add_local_master_modal() {
+        clear_local_add_modal();
+        $("#AddMasterModal").modal("show");
+    }
+
+    function clear_local_add_modal() {
+        var rows = document.getElementsByClassName("add_modal_resource_row");
+        document.getElementById("add_modal_code").value = "";
+        document.getElementById("add_modal_name").value = "";
+        document.getElementById("add_modal_remark").value = "";
+        var i;
+        var total = rows.length;
+
+        for (i = 1; i < total; i++) {
+            rows[0].remove();
+        }
+
+        rows[0].getElementsByClassName("add_master_quantity")[0].value = "1";
+        rows[0].getElementsByClassName("add_master_price")[0].value = "0";
+        rows[0].getElementsByClassName("add_master_amount")[0].value = "0";
+
+        document.getElementById("add_master_total").innerHTML = "AED 00.00";
+    }
+
+    function add_local_add_resource() {
+        var rr = document.getElementsByClassName("add_modal_resource_row")[0];
+        var cl = rr.cloneNode(true);
+        cl.getElementsByClassName("add_master_resource")[0].value = "";
+        cl.getElementsByClassName("add_master_quantity")[0].value = "1";
+        cl.getElementsByClassName("add_master_category")[0].value = "";
+        cl.getElementsByClassName("add_master_remark")[0].value = "";
+        cl.getElementsByClassName("add_master_price")[0].value = "0";
+        cl.getElementsByClassName("add_master_amount")[0].value = "0";
+
+        rr.parentElement.appendChild(cl);
+    }
+
+    function save_local_master(tp) {
+        var code = document.getElementById("add_modal_code").value;
+        var name = document.getElementById("add_modal_name").value;
+        var remark = document.getElementById("add_modal_remark").value;
+        var data = code + "/////" + name + "/////" + remark;
+
+        var reses = document.getElementsByClassName("add_modal_resource_row");
+        var i;
+        var sdata = "";
+        for (i = 0; i < reses.length; i++) {
+            var rid = reses[i].getElementsByClassName("add_selected_resource")[0].value;
+            var qt = reses[i].getElementsByClassName("add_master_quantity")[0].value;
+            var rem = reses[i].getElementsByClassName("add_master_remark")[0].value;
+            var prc = reses[i].getElementsByClassName("add_master_price")[0].value;
+            var amnt = reses[i].getElementsByClassName("add_master_amount")[0].value;
+
+            if (sdata == "") {
+                sdata = rid + ",," + qt + ",," + prc + ",," + amnt + ",," + rem;
+            } else {
+                sdata += "//" + rid + ",," + qt + ",," + prc + ",," + amnt + ",," + rem;
+            }
+
+        }
+
+        $.ajax({
+            url: 'save_local_master/',
+            type: 'POST',
+            async: false,
+            data: { data: data + "^^^^^" + sdata },
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function (json) {
+                var trs = document.getElementsByClassName("table_row");
+                var tr = trs[0];
+                var cl = tr.cloneNode(true);
+                
+                cl.getElementsByClassName("rowid")[0].innerHTML = json.data;
+                cl.getElementsByClassName("rownum")[0].innerHTML = trs.length+1;
+                cl.getElementsByClassName("rowcode")[0].innerHTML = code;
+                cl.getElementsByClassName("rowname")[0].innerHTML = name;
+                cl.getElementsByClassName("rowname")[0].innerHTML = name;
+                cl.getElementsByClassName("rowprice")[0].innerHTML = document.getElementById("add_master_total").innerHTML.replace("AED ", "");
+                tr.parentNode.appendChild(cl);
+                $("#AddMasterModal").modal("hide");
+                if(tp == "next"){
+                    setTimeout(function()
+                    {   
+                        //clear_local_add_modal();
+                        $("#AddMasterModal").modal("show");
+                    }, 300);
+                }
+            },
+            error: function (xhr, errmsg, err) {
+                alert(err);
+            }
+        });
+    }
+
+    // Update Methods
+    var opened_master = 0;
+    var clicked_row = 0;
+
+    function open_local_master_edit_modal() {
+        clear_local_modal();
+        var mid = clicked_event.target.parentNode.getElementsByClassName("rowid")[0].innerHTML;
+        opened_master = mid;
+        var master_detail = get_my_master_details(mid);
+        var mod = document.getElementById("MyMasterModal");
+        var res_split = master_detail.split("___");
+
+        mod.getElementsByClassName("modal_code")[0].value = res_split[0];
+        mod.getElementsByClassName("modal_name")[0].value = res_split[1];
+        mod.getElementsByClassName("modal_remark")[0].value = res_split[2];
+
+        var components = res_split[3];
+        var comp_split = components.split("//");
+        var i;
+        var rr = document.getElementsByClassName("modal_resource_row")[0];
+        for (i = 0; i < comp_split.length; i++) {
+            var cl = rr;
+            if (i != 0) {
+                cl = rr.cloneNode(true);
+                rr.parentNode.appendChild(cl);
+            }
+
+            var c_split = comp_split[i].split(",,");
+            var r_data = get_resource_detail_new(c_split[0]);
+            var r_split = r_data.split("/////");
+
+            cl.getElementsByClassName("selected_resource")[0].value = c_split[0];
+            cl.getElementsByClassName("master_quantity")[0].value = c_split[1];
+            cl.getElementsByClassName("master_remark")[0].value = c_split[4];
+
+            cl.getElementsByClassName("master_resource")[0].value = r_split[0] + " / " + r_split[1];
+            cl.getElementsByClassName("master_price")[0].value = r_split[2];
+            cl.getElementsByClassName("master_category")[0].value = r_split[3];
+        }
+        calculate_local_modal_price();
+        $("#MyMasterModal").modal("show");
+    }
+
+    function update_local_master() {
+        var code = document.getElementById("modal_code").value;
+        var name = document.getElementById("modal_name").value;
+        var remark = document.getElementById("modal_remark").value;
+        var mid = opened_master;
+        var data = mid + "/////" + code + "/////" + name + "/////" + remark;
+
+        var reses = document.getElementsByClassName("modal_resource_row");
+        var i;
+        var sdata = "";
+        for (i = 0; i < reses.length; i++) {
+            var rid = reses[i].getElementsByClassName("selected_resource")[0].value;
+            var qt = reses[i].getElementsByClassName("master_quantity")[0].value;
+            var rem = reses[i].getElementsByClassName("master_remark")[0].value;
+            var prc = reses[i].getElementsByClassName("master_price")[0].value;
+            var amnt = reses[i].getElementsByClassName("master_amount")[0].value;
+
+            if (sdata == "") {
+                sdata = rid + ",," + qt + ",," + prc + ",," + amnt + ",," + rem;
+            } else {
+                sdata += "//" + rid + ",," + qt + ",," + prc + ",," + amnt + ",," + rem;
+            }
+
+        }
+
+        $.ajax({
+            url: 'update_master/',
+            type: 'POST',
+            async: false,
+            data: { data: data + "^^^^^" + sdata },
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function (json) {
+                var status = json.data;
+                if (status == "done") {
+                    var pr = clicked_event.target.parentNode;
+                    pr.getElementsByClassName("rowcode")[0].innerHTML = code;
+                    pr.getElementsByClassName("rowname")[0].innerHTML = name;
+                    pr.getElementsByClassName("rowprice")[0].innerHTML = document.getElementById("master_total").innerHTML.replace("AED ", "");
+                    pr.getElementsByClassName("rowremark")[0].innerHTML = remark;
+                    $("#MyMasterModal").modal("hide");
+                }
+            },
+            error: function (xhr, errmsg, err) {
+                alert(err);
+            }
+        });
+    }
+
+    function export_master(){
+        $.ajax({
+            url: 'export_master/',
+            type: 'POST',
+            async: false,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+
+            success: function (json) {
+                alert(json.status);
+            },
+            error: function (xhr, errmsg, err) {
+                alert(err);
+            }
+        });
+    }
+
+
+    function delete_local_resource(event) {
+        var rr = document.getElementsByClassName("modal_resource_row").length;
+        if (rr > 1) {
+            event.target.parentNode.remove();
+            calculate_local_modal_price();
+        }
+    }
+
+    function delete_local_add_resource(event) {
+        var rr = document.getElementsByClassName("add_modal_resource_row").length;
+        if (rr > 1) {
+            event.target.parentNode.remove();
+            calculate_local_modal_add_price();
+        }
+    }
+
+    function add_local_resource() {
+        var rr = document.getElementsByClassName("modal_resource_row")[0];
+        var cl = rr.cloneNode(true);
+        cl.getElementsByClassName("master_resource")[0].value = "";
+        cl.getElementsByClassName("master_quantity")[0].value = "1";
+        cl.getElementsByClassName("master_category")[0].value = "";
+        cl.getElementsByClassName("master_remark")[0].value = "";
+        cl.getElementsByClassName("master_price")[0].value = "0";
+        cl.getElementsByClassName("master_amount")[0].value = "0";
+
+        rr.parentElement.appendChild(cl);
+    }
+
+    function clear_local_modal() {
+        var rows = document.getElementsByClassName("modal_resource_row");
+        document.getElementById("modal_code").value = "";
+        document.getElementById("modal_name").value = "";
+        document.getElementById("modal_remark").value = "";
+        var i;
+        var total = rows.length;
+
+        for (i = 1; i < total; i++) {
+            rows[0].remove();
+        }
+
+        rows[0].getElementsByClassName("master_quantity")[0].value = "0";
+        rows[0].getElementsByClassName("master_price")[0].value = "0";
+        rows[0].getElementsByClassName("master_amount")[0].value = "0";
+
+        document.getElementById("master_total").innerHTML = "AED 00.00";
+    }
+
+    function search_local_master() {
+        var inputVal = document.getElementById("search").value.toLowerCase();
+        var all_rows = document.getElementsByClassName("table_row");
+        var i;
+        for (i = 0; i < all_rows.length; i++) {
+            var code = all_rows[i].innerHTML.toLowerCase();
+            var name = all_rows[i].innerHTML.toLowerCase();
+
+            if (code.includes(inputVal) || name.includes(inputVal)) {
+                all_rows[i].hidden = false;
+            } else {
+                all_rows[i].hidden = true;
+            }
+        }
+    }
+
+    function search_add_resource(event) {
+        var txt = event.target.value;
+        var options = document.getElementsByClassName("add_res_option");
+        var i;
+        for (i = 0; i < options.length; i++) {
+            if (options[i].innerHTML.toLowerCase().includes(txt.toLowerCase())) {
+                options[i].hidden = false;
+            } else {
+                options[i].hidden = true;
+            }
+        }
+    }
+
+    function set_res_value(event) {
+        event.target.parentNode.previousElementSibling.value = event.target.innerHTML;
+        event.target.parentNode.previousElementSibling.previousElementSibling.value = event.target.value;
+        event.target.parentNode.classList.remove("show");
+        set_my_resource_price(event);
+    }
+
+    function set_res_add_value(event) {
+        event.target.parentNode.previousElementSibling.value = event.target.innerHTML;
+        event.target.parentNode.previousElementSibling.previousElementSibling.value = event.target.value;
+        event.target.parentNode.classList.remove("show");
+        set_my_resource_add_price(event);
+    }
+
+    function set_my_resource_price(event) {
+        var selected_value = event.target.value;
+        var resource_details = get_resource_detail_new(selected_value);
+        var resource_split = resource_details.split("/////");
+
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("master_price")[0].value = resource_split[2];
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("master_category")[0].value = resource_split[3];
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("master_remark")[0].value = resource_split[4];
+
+        calculate_local_modal_price();
+    }
+
+    function set_my_resource_add_price(event) {
+        var selected_value = event.target.value;
+        var resource_details = get_resource_detail_new(selected_value);
+        var resource_split = resource_details.split("/////");
+
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("add_master_price")[0].value = resource_split[2];
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("add_master_category")[0].value = resource_split[3];
+        event.target.parentNode.parentNode.parentNode.getElementsByClassName("add_master_remark")[0].value = resource_split[4];
+
+        calculate_local_modal_add_price();
+    }
+
+    function calculate_local_modal_price() {
+        var rows = document.getElementsByClassName("modal_resource_row");
+        var i;
+        var total = 0;
+        for (i = 0; i < rows.length; i++) {
+            var qt = rows[i].getElementsByClassName("master_quantity")[0].value;
+            var prc = rows[i].getElementsByClassName("master_price")[0].value;
+            var t = parseFloat(qt) * parseFloat(prc);
+            total += t;
+            rows[i].getElementsByClassName("master_amount")[0].value = Number(t.toFixed(2));
+        }
+        document.getElementById("master_total").innerHTML = "AED " + Number(total.toFixed(2));
+    }
+
+    function calculate_local_modal_add_price() {
+        var rows = document.getElementsByClassName("add_modal_resource_row");
+        var i;
+        var total = 0;
+        for (i = 0; i < rows.length; i++) {
+            var qt = rows[i].getElementsByClassName("add_master_quantity")[0].value;
+            var prc = rows[i].getElementsByClassName("add_master_price")[0].value;
+            var t = parseFloat(qt) * parseFloat(prc);
+            total += t;
+            rows[i].getElementsByClassName("add_master_amount")[0].value = Number(t.toFixed(2));
+        }
+        document.getElementById("add_master_total").innerHTML = "AED " + Number(total.toFixed(2));
+    }
+</script>
+
+{% endblock%}

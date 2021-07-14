@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div id="overlay">
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="shadow text-center tst">
+
+    BOQ Saved
+
+</div>
+
+
+<div class="container-fluid" style="padding-top: 20px;">
+    <div class="row shadow toprow">
+        <div class="col-auto my-auto">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-4 boqname">
+            {{ boq.name }}
+        </div>
+
+        <div class="col-3" id="boq_total">
+            Total Selling: AED 00.00 <br>
+            Total Dry: AED 00.00
+        </div>
+        <input type="text" id="boqid" value="{{ boq.id }}" hidden>
+        <input type="text" id="modal_type" value="add" hidden>
+
+        <div class="col-2">
+            <input type="file" name="excelfile" id="excelfile" hidden>
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#excelModal" style="margin-top: 5px;">Upload BOQ</button>
+        </div>
+
+        <div class="col-2">
+            <button class="btn btn-primary w-100" style="margin-top: 5px;" onclick="open_master_modal('boq')">
+                Add New Master Item</button>
+        </div>
+
+        
+    </div>
+
+    <div class="modal fade" id="excelModal" tabindex="-1" aria-labelledby="excelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="excelModalLabel">Select File</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'excel_boq' boq.id %}" enctype="multipart/form-data" method="POST">
+                    {% csrf_token %}
+                    <input type="file" id="uploaded_file" name="uploaded_file" class="form-control">
+                    <p style="font-weight: bold;margin-top: 30px;margin-bottom: 0px;">Enter the respective column numbers</p>
+                    <div class="row">
+                        <div class="col">
+                            <label for="">Heading</label>
+                            <input type="number" class="form-control" name="heading_number" id="heading_number">
+                        </div>
+                        <!-- <div class="col">
+                            <label for="">Item</label>
+                            <input type="number" class="form-control" name="item_number" id="item_number">
+                        </div> -->
+                        <div class="col">
+                            <label for="">Description</label>
+                            <input type="number" class="form-control" name="desc_number" id="desc_number">
+                        </div>
+                        <div class="col">
+                            <label for="">Quantity</label>
+                            <input type="number" class="form-control" name="quantity_number" id="quantity_number">
+                        </div>
+                        <div class="col">
+                            <label for="">UOM</label>
+                            <input type="number" class="form-control" name="uom_number" id="uom_number">
+                        </div>
+                    </div>
+                    <input type="submit" value="Open" class="btn btn-success" style="margin-top: 20px;">
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Modal -->
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="MasterModal"
+    aria-labelledby="MasterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="MasterModalLabel">Master Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="position: static; ">
+                <input type="text" id="modal_code" class="form-control modal_field" placeholder="Code">
+                <input type="text" id="modal_name" class="form-control modal_field" placeholder="Master Name">
+                <input type="text" id="modal_remark" class="form-control modal_field" placeholder="Remark">
+                <input type="text" id="modal_id" value="999999" hidden>
+
+                <div class="labels">
+                    <div class="row" style="font-weight: bold;">
+                        <div class="col-6">
+                            Resource
+                        </div>
+                        <div class="col-1">
+                            Quantity
+                        </div>
+                        <div class="col-2">
+                            Price
+                        </div>
+                        <div class="col-2">
+                            Amount
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal_master_container">
+                    <div class="row modal_resource_row" id="test">
+                        <div class="col-6">
+                            <select class='select2 form-control form-control-sm master_resource'
+                                onchange="set_modal_res_price(event)" style="width: 100%;">
+                                <option value='select'>Select Resource...</option>
+                                {% for resource in resources %}
+                                <option value='{{resource.id}}' class="option">{{resource.code}} /
+                                    {{resource.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-1">
+                            <input type="number" onchange="calculateAmount()"
+                                class="master_quantity form-control" value="1">
+                        </div>
+                        <div class="col-2">
+                            <input type="number" id="modal_price1" onchange="calculateAmount()" step="0.01"
+                                class="master_price form-control" value="0" readonly>
+                        </div>
+                        <div class="col-2">
+                            <input type="number" class="master_amount form-control" step="0.01" value="0"
+                                readonly>
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-9">
+                        <button class="btn btn-info" onclick="add_modal_resource('readonly')">Add Resource</button>
+                    </div>
+                    <div class="col-3">
+                        <p id="master_total">AED 00.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="clear_modal()">Clear</button>
+                <button type="button" class="btn btn-primary" onclick="save_master(0,'boq')">Save</button>
+                <!-- <button type="button" class="btn btn-primary" id="save_as_new" onclick="save_as_new_master()">Save As New</button> -->
+                <button type="button" class="btn btn-primary" id="savenext" onclick="save_master(1, 'boq')">Save & Next</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row" style="margin-top: 50px;">
+        <div class="col-8 my-auto">
+            <button class="btn btn-dark">Export BOQ</button>
+        </div>
+
+        <div class="col-1">
+            <label for="f1">Factor 1</label>
+            <input type="number" name="f1" id="f1" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor1 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f2">Factor 2</label>
+            <input type="number" name="f2" id="f2" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor2 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f3">Factor 3</label>
+            <input type="number" name="f3" id="f3" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor3 }}" class="form-control form-control-sm">
+        </div>
+        <div class="col-1">
+            <label for="f4">Factor 4</label>
+            <input type="number" name="f4" id="f4" step="0.01" onchange="calculate_boq_total()" value="{{ boq.factor4 }}" class="form-control form-control-sm">
+        </div>
+    </div>
+    <div id="bigblock" style="margin-top: 10px;">
+        
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+        <div class="col">
+            <button class="btn btn-primary" onclick="add_category()">Add Category</button>
+        </div>
+        <div class="col-1">
+            <button class="btn btn-success w-100" onclick="save_with_button()">Save BOQ</button>
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-info" onclick="scroll_to_top()" style="position: fixed;bottom: 0px;right: 0px;">Top</button>
+{% endblock %}

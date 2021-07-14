@@ -1,0 +1,277 @@
+.box{
+    border: 1px solid #b6b6b6;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.dropdown_content {
+    display: none;
+    position: absolute;
+    background-color: #f6f6f6;
+    min-width: 250px;
+    max-height: 400px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+}
+
+.master_dropdown_content{
+    display: none;
+    position: absolute;
+    background-color: #f6f6f6;
+    width: 90%;
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+}
+
+.show{
+    display: block;
+}
+
+.dropdown_content option{
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border-bottom: 1px solid rgb(211, 211, 211);
+}
+
+.search_pane{
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    padding: 10px;
+    overflow-y: scroll;
+    height:500px;
+}
+
+.item{
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.boqname{
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.toprow{
+    border-radius: 50px;
+    border: 1px solid rgb(177, 177, 177);
+    position: fixed;
+    width: 100%;
+    background-color: white;
+    z-index: 1039;
+}
+
+.bb{
+    border: 1px solid grey;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.heading{
+    width: 40%;
+    margin-bottom: 20px;
+    display: inline;
+}
+
+.excel_heading{
+    width: 40%;
+    margin-bottom: 20px;
+    display: inline;
+}
+
+.master_label{
+    color: red;
+}
+
+.modal_label{
+    color: red;
+    font-weight: bold;
+}
+
+.heading_number{
+    font-weight: bold;
+    display: inline;
+}
+
+.excel_heading_number{
+    font-weight: bold;
+    display: inline;
+}
+
+.bb_container{
+    margin-bottom: 20px;
+    padding-left: 30px;
+}
+
+.bb_container_false{
+    padding-left: 30px;
+}
+
+.modal_field{
+    margin-bottom: 10px;
+}
+
+.modal_resource_row{
+    margin-bottom: 10px;
+}
+
+.add_modal_resource_row{
+    margin-bottom: 10px;
+}
+
+#master_total{
+    display: inline;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+#add_master_total{
+    display: inline;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.field_name{
+    font-weight:bold;
+    margin-bottom:-20px;
+}
+
+.child_rows{
+    margin-bottom:10px
+}
+
+.item_number{
+    margin-right: 5px;
+}
+
+.detail_row{
+    display:inline;
+    float:right;
+    font-weight:bold;
+}
+
+.list_item{
+    border-bottom: 1px solid rgb(238, 238, 238);
+    padding: 5px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.master_list{
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    display: none
+}
+
+.master_ul{
+    position: absolute;
+    background-color: white;
+    height: 400px;
+    width: 100%;
+    overflow-y: scroll;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.list_item:hover{
+    box-shadow: 5px 0px 10px grey;
+}
+
+#overlay {
+    position: fixed; /* Sit on top of the page content */
+    display: block;
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
+  }
+
+.loadingtext{
+    font-size: 20px;
+    font-weight: bold;
+    position: fixed;
+    left: 50%;top:50%;
+    margin-top: 30px;
+    color: white;
+    transform: translate(-50%, -50%);
+}
+
+.loadingicon{
+    width: 500px;
+    position: fixed;
+    left: 50%;top:50%;
+    transform: translate(-50%, -50%);
+}
+
+.tst{
+    width: 300px;
+    position: fixed;
+    left: 50%;top:50%;
+    transform: translate(-50%, -50%);
+    padding: 30px;
+    border-radius: 10px;
+    font-weight: bold;
+    opacity: 0;
+    background-color: aquamarine;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#convert_menu{
+    margin-left: 50px;
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgb(255, 161, 161);
+}
+
+#convert_menu_billable{
+    margin-left: 50px;
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgb(255, 161, 161);
+}
+
+.tst.fadein{
+    opacity: 1;
+}
+
+.backbtn{
+    width: 30px;
+    border: 1px solid;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.backbtn:hover{
+    background: greenyellow;
+}
+
+.btn-success:focus, .btn-success:active{
+    box-shadow:none !important;
+    outline:0px !important;
+}
+
+.btn-secondary:focus,.btn-secondary:active{
+    box-shadow:none !important;
+    outline:0px !important;
+}

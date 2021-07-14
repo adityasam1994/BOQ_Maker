@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row" style="margin-top: 30px;">
+        <div class="col-4">
+            <img src="{% static 'img/ulogo.png' %}" alt="" style="transform: scale(0.5);transform-origin: 0% 0%;">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 text-center">
+            <input type="text" id="username" class="form-control text-center" placeholder="Username">
+            <input type="password" id="password" class="form-control text-center" style="margin-top: 20px;" placeholder="Password">
+            <input type="button" value="Login" onclick="loginuser()" class="btn btn-success text-center" style="margin-top: 20px;">
+        </div>
+    </div>
+</div>
+
+{% endblock %}

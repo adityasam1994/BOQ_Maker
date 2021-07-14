@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load app_filters %}
+{% block content %}
+
+<div id="overlay">
+    <img src="{% static 'img/loading.gif' %}" alt="loading" class="loadingicon">
+    <p class="loadingtext">Loading</p>
+</div>
+
+<div class="container-fluid" style="padding: 10px 10px 0px 10px;position: fixed;background-color: white;border-bottom: 1px solid;">
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-1">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'img/back.png' %}" class="backbtn" alt="backbtn">
+            </a>
+        </div>
+        <div class="col-3"></div>
+        <div class="col-4 text-center" style="font-size: 30px;font-weight: bold;border-radius: 5px;border: 1px solid;">
+            Resources
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 30px">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" style="border-radius: 50px;" onkeyup="search_resource()" class="form-control w-100" name="search" id="search" placeholder="Search...">
+        </div>
+        <div class="col-2"></div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#importModal">Import Resource</button>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" onclick="export_resource()">Export Resource</button>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#resourceModal">Add Resource</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+        <table class="table" style="border: 1px solid white;margin: 0px;">
+            <thead>
+              <tr>
+                <th scope="col" style="width: 5%;">#</th>
+                <th scope="col" style="width: 10%;">Code</th>
+                <th scope="col" style="width: 40%;">Name</th>
+                <th scope="col" style="width: 10%;">Price</th>
+                <th scope="col" style="width: 10%;">Category</th>
+                <th scope="col" style="width: 45%;">Remark</th>
+              </tr>
+            </thead>
+        </table>
+    </div>
+    </div>
+</div>
+<div class="container-fluid" style="padding: 200px 10px 0px 10px">
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importModalLabel">Import Resources</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'import_resources' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" id="import_file" name="import_file" class="form-control">
+            <input type="submit" value="Import" class="btn btn-success" style="margin-top: 20px;">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal End -->
+
+    <!-- Add resource Modal -->
+    <div class="modal fade" id="resourceModal" tabindex="-1" aria-labelledby="resourceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" style="z-index: 1050;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resourceModalLabel">Add Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="" style="margin-top: 10px;">Resource Code</label>
+                <input type="text" class="form-control form-control-sm" id="resourcecode"  placeholder="Resource code">
+                <label for="" style="margin-top: 10px;">Resource Name</label>
+                <input type="text" class="form-control form-control-sm" id="resourcename"  placeholder="Resource Name">
+                <label for="" style="margin-top: 10px;">Unit Price</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="resourceprice" value="0">
+                <label for="" style="margin-top: 10px;">Category</label>
+                <select class='form-control form-control-sm' id="resourcecategory" style="width: 100%;">
+                    {% for cat in cats %}
+                        <option value='{{cat.category_value}}'>{{cat.category_name}}</option>
+                    {% endfor %}
+                </select>
+                <label for="" style="margin-top: 10px;">Remark</label>
+                <textarea name="boqdesc" id="resourceremark" class="form-control form-control-sm" rows="5"></textarea>
+                <input type="button" value="Create" style="margin-top: 20px;" class="btn btn-primary create_res">
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <tbody>
+                {% for resource in resources %}
+                  <tr style="cursor: pointer;" class="table_row">
+                    <th class="rowid trh" hidden>{{resource.id}}</th>
+                    <th style="width: 5%;" scope="row" class="row_num trh">{{ forloop.counter }}</th>
+                    <td style="width: 10%;" class="trh rowcode">{{resource.code}}</td>
+                    <td style="width: 40%;" class="trh rowname">{{resource.name}}</td>
+                    <td style="width: 10%;" class="trh rowprice">{{resource.price|comma_sep}}</td>
+                    <td style="width: 10%;" class="trh rowcategory">{{resource.category}}</td>
+                    <td style="width: 45%;" class="trh rowremark">{{resource.remark}}</td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Resource Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" value="0" class="resource_id" hidden>
+                <label for="">Resource Code</label>
+                <input type="text" class="form-control form-control-sm code" name="code" id="code" placeholder="Resource code">
+                <label for="" style="margin-top: 10px;">Resource Name</label>
+                <input type="text" class="form-control form-control-sm name" name="name" id="name" placeholder="Resource Name" >
+                <label for="" style="margin-top: 10px;">UOM</label>
+                <input type="text" class="form-control form-control-sm uom" name="uom" id="uom" placeholder="UOM" >
+                <label for="" style="margin-top: 10px;">Unit Price</label>
+                <input type="number" step="0.01" class="form-control form-control-sm price" name="price" id="price">
+                <label for="" style="margin-top: 10px;">Category</label>
+                <select class='form-control form-control-sm category' id="category" style="width: 100%;">
+                {% for cat in cats %}
+                    <option value='{{cat.category_value}}'>{{cat.category_name}}</option>
+                {% endfor %}
+                </select>
+                <label for="" style="margin-top: 10px;">Remark</label>
+                <textarea id="remark" class="form-control form-control-sm remark" rows="5">{{resource.remark}}</textarea>
+                <input type="button" value="Delete" style="margin-top: 20px;" class="btn btn-danger del">
+                <input type="button" value="Update" style="margin-top: 20px;" class="btn btn-primary up">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.onreadystatechange = () => {
+    if (document.readyState === 'complete') {
+        removeloading();
+    }
+    };
+
+    var clicked_event = null;
+
+    $(document).click(function(event) {
+        var cls = event.target;
+        if(cls.parentNode.classList.contains("table_row")){
+            clicked_event = event;
+            open_res_edit_modal();
+        }
+        if(cls.classList.contains("up")){
+            update_local_resource();
+        }
+        if(cls.classList.contains("create_res")){
+            create_new_resource();
+        }
+        if(cls.classList.contains("del")){
+            delete_resource_db();
+        }
+    });
+
+function export_resource(){
+    $.ajax({
+        url: 'export_resource/',
+        type: 'POST',
+        async: false,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+
+        success: function(json){
+            if(json.status == "done"){
+                alert("Export Done");
+            }else{
+                alert("Could not export resources");
+            }
+        },
+        error: function(xhr, errmsg, err){
+
+        }
+    });
+}
+
+function delete_resource_db(){
+    $.ajax({
+        url: 'delete_resource_db/',
+        type: 'POST',
+        async: false,
+        data: {data: opened_resource},
+        csrfmiddlewaretoken: "{{csrf_token}}",
+
+        success: function(json){
+            var rows = document.getElementsByClassName("rowid");
+            var i;
+            for(i=0;i<rows.length;i++){
+                var v = rows[i].innerHTML;
+                if(v == json.data){
+                    rows[i].parentNode.remove();
+                    break;
+                }
+            }
+            $("#editModal").modal("hide");
+        },
+        error: function(xhr, errmsg, err){
+
+        }
+    });
+}
+
+
+function create_new_resource(){
+    var code = document.getElementById("resourcecode").value;
+    var name = document.getElementById("resourcename").value;
+    var price = document.getElementById("resourceprice").value;
+    var category = document.getElementById("resourcecategory").value;
+    var remark = document.getElementById("resourceremark").value;
+    var num_rows = document.getElementsByClassName("row_num").length+1;
+
+    var data = code + "/////" + name +"/////" + price +"/////" + category + "/////" + remark;
+    $.ajax({
+        url: 'create_new_resource/',
+        type: 'POST',
+        async: false,
+        data: {data: data},
+        csrfmiddlewaretoken: "{{csrf_token}}",
+
+        success: function(json){
+            var iid = json.data;
+            var trow = document.getElementsByClassName("table_row")[0];
+            var ntr = trow.cloneNode(true);
+
+            var all_th = ntr.getElementsByClassName("trh");
+            all_th[0].innerHTML = iid;
+            all_th[1].innerHTML = num_rows;
+
+            all_th[2].innerHTML = code;
+
+            all_th[3].innerHTML = name;
+
+            all_th[4].innerHTML = price;
+
+            all_th[5].innerHTML = category;
+
+            all_th[6].innerHTML = remark;
+
+            trow.parentNode.appendChild(ntr);
+
+            $("#resourceModal").modal("hide");
+        },
+        error: function(xhr, errmsg, err){
+
+        }
+    });
+}
+
+function open_res_edit_modal(){
+    var rid = clicked_event.target.parentNode.getElementsByClassName("rowid")[0].innerHTML;
+    opened_resource = rid;
+    var res_detail = get_resource_detail_new(rid);
+    var mod = document.getElementById("editModal");
+    var res_split = res_detail.split("/////");
+
+    mod.getElementsByClassName("resource_id")[0].value = rid;
+    mod.getElementsByClassName("code")[0].value = res_split[0];
+    mod.getElementsByClassName("name")[0].value = res_split[1];
+    mod.getElementsByClassName("price")[0].value = res_split[2];
+    mod.getElementsByClassName("category")[0].value = res_split[3];
+    mod.getElementsByClassName("remark")[0].value = res_split[4];
+    mod.getElementsByClassName("uom")[0].value = res_split[5];
+    mod.getElementsByClassName("del")[0].onclick = delete_resource_db;
+    $("#editModal").modal("show");
+}
+
+    // Updating resource
+
+function update_local_resource(){
+    var resource_id = clicked_event.target.parentNode.getElementsByClassName("rowid")[0].innerHTML;
+    
+    var name = document.getElementsByClassName("name")[0].value;
+    var code = document.getElementsByClassName("code")[0].value;
+    var price = document.getElementsByClassName("price")[0].value;
+    var category = document.getElementsByClassName("category")[0].value;
+    var uom = document.getElementsByClassName("uom")[0].value;
+    var remark = document.getElementsByClassName("remark")[0].value;
+    var data = resource_id+"/////"+code+"/////"+name+"/////"+price + "/////" + category + "/////" + remark +"/////" + uom; 
+
+    $.ajax({
+        url: 'update_resource/',
+        type: 'POST',
+        async: false,
+        data: {data: data},
+        csrfmiddlewaretoken: "{{csrf_token}}",
+
+        success: function(json){
+            var par = clicked_event.target.parentNode;
+            par.getElementsByClassName("rowid")[0].innerHTML = resource_id;
+            par.getElementsByClassName("rowcode")[0].innerHTML = code;
+            par.getElementsByClassName("rowname")[0].innerHTML = name;
+            par.getElementsByClassName("rowprice")[0].innerHTML = price;
+            par.getElementsByClassName("rowcategory")[0].innerHTML = category;
+            par.getElementsByClassName("rowremark")[0].innerHTML = remark;
+            $("#editModal").modal("hide");
+        },
+        error: function(xhr, errmsg, err){
+
+        }
+    });
+}
+
+</script>
+
+<script>
+    function search_resource(){
+        var inputVal = document.getElementById("search").value.toLowerCase();
+        var all_rows= document.getElementsByClassName("table_row");
+        var i;
+        for(i=0;i<all_rows.length;i++){
+            var code = all_rows[i].innerHTML.toLowerCase();
+
+            if(code.includes(inputVal)){
+                all_rows[i].hidden = false;
+            }else{
+                all_rows[i].hidden = true;
+            }
+        }
+    }
+</script>
+
+{% endblock%}
